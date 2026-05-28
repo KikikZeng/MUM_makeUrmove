@@ -1,5 +1,5 @@
 package com.example.cardgame.controller;
-
+import com.example.cardgame.ai.MonteCarloAIDecisionStrategy;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
@@ -176,12 +176,10 @@ public class GameController implements GameActionHandler {
     }
 
     private void initAIEventListener() {
-        if (aiEventListener != null) {
-            aiEventListener.unregister();
-        }
-        AIDecisionStrategy strategy = new GreedyAIDecisionStrategy();
+        if (aiEventListener != null) aiEventListener.unregister();
+        AIDecisionStrategy strategy = new MonteCarloAIDecisionStrategy(); // 替换 Greedy
         aiEventListener = new AIEventListener(this, gameEngine, strategy);
-        HermesLog.log("GameController: AIEventListener initialized");
+        HermesLog.log("GameController: MonteCarlo AI Strategy initialized");
     }
 
     // ==================== 接口方法：供 UI 调用（显示字符串） ====================
