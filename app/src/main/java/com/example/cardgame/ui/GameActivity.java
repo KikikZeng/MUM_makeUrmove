@@ -303,8 +303,8 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
         List<String> myHandCards = data.getMyHandCards();
         handCards = (myHandCards != null) ? new ArrayList<>(myHandCards) : new ArrayList<>();
 
-        // 不再使用底部按钮，全部由内联按钮控制
-        // 因此删除 btnPlay / btnPass 的设置
+        // 恢复同步选中牌列表
+        selectedCardIds = new ArrayList<>(data.getSelectedCardIds());
 
         Log.d("GameCheck", "当前手牌: " + data.getMyHandCards());
         Log.d("GameCheck", "最后出牌: " + data.getLastPlayCards());
@@ -319,15 +319,7 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
                 String cardDisplay = handCards.get(position);
                 if (gameActionHandler != null) {
                     gameActionHandler.toggleCardSelection(cardDisplay);
-                    if (selectedCardIds.contains(cardDisplay)) {
-                        selectedCardIds.remove(cardDisplay);
-                    } else {
-                        selectedCardIds.add(cardDisplay);
-                    }
-                    updatePatternHint();
-                    if (cardAdapter != null) {
-                        cardAdapter.notifyItemChanged(position);
-                    }
+                    fullRefresh();  // 刷新整个界面以同步选中状态
                 }
             });
             rvHandCards.setAdapter(cardAdapter);
@@ -1097,6 +1089,7 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
         if (hintFlush != null) hintFlush.setTextColor(color);
         if (hintIron != null) hintIron.setTextColor(color);
         if (hintStraightFlush != null) hintStraightFlush.setTextColor(color);
+        if (hintFullHouse != null) hintFullHouse.setTextColor(color);
     }
 
     private void showGameOverDialog(GameViewData data) {
