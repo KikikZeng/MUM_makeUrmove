@@ -56,6 +56,7 @@ import com.example.cardgame.event.CardPlayedEvent;
 import com.example.cardgame.event.PlayerPassedEvent;
 import com.example.cardgame.event.TurnChangedEvent;
 import com.example.cardgame.event.GameOverEvent;
+import com.example.cardgame.rule.RuleConfig;
 
 public class GameActivity extends AppCompatActivity implements GameController.CountdownUICallback, GameEventListener {
 
@@ -66,6 +67,7 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
     private LinearLayout playAreaTop;
     private LinearLayout playAreaLeft;
     private LinearLayout playAreaRight;
+    private RuleConfig ruleConfig;
 
     private boolean gameOverDialogShown = false;
 
@@ -188,6 +190,9 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
         isBluetoothGame = getIntent().getBooleanExtra("is_bluetooth_game", false);
         isHost = getIntent().getBooleanExtra("is_host", false);
         localPlayerId = getIntent().getStringExtra("local_player_id");
+        String ruleType = getIntent().getStringExtra("rule_type");
+        if (ruleType == null) ruleType = "南方规则";
+        this.ruleConfig = "北方规则".equals(ruleType) ? RuleConfig.NORTHERN : RuleConfig.SOUTHERN;
 
         if (!isBluetoothGame) {
             localPlayerId = "P1";
@@ -248,6 +253,7 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
                         + isHost + ", localPlayerId=" + localPlayerId);
 
                 if (isHost) {
+                    gameActionHandler.setSelectedRuleType(ruleType);
                     gameActionHandler.startNewGame();
                     Toast.makeText(this, "蓝牙房主模式：已开局并同步", Toast.LENGTH_SHORT).show();
                 } else {
@@ -258,6 +264,7 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
                 bluetoothRefreshHandler.post(bluetoothRefreshRunnable);
             } else {
                 System.out.println("[CardGame][UI] gameActionHandler ready, start real game flow");
+                gameActionHandler.setSelectedRuleType(ruleType);
                 gameActionHandler.startNewGame();
                 fullRefresh();
                 Toast.makeText(this, "真实联调模式", Toast.LENGTH_SHORT).show();
@@ -980,7 +987,7 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
         }
         if (selectedCards.isEmpty()) return;
 
-        PatternRecognizer recognizer = new PatternRecognizer();
+        PatternRecognizer recognizer = new PatternRecognizer(ruleConfig);
         PatternRecognizer.PatternInfo info = recognizer.recognizePattern(selectedCards);
         if (info.getType() == PatternRecognizer.PatternType.INVALID) return;
 

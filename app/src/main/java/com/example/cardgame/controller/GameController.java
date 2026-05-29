@@ -31,16 +31,21 @@ import java.util.stream.Collectors;
 public class GameController implements GameActionHandler {
 
     private final GameEngine gameEngine;
+    private RuleConfig ruleConfig;
     private final List<String> selectedCardIds = new ArrayList<>();
 
     private String myPlayerId = "P1";
     private boolean bluetoothMode = false;
     private boolean hostMode = false;
+    private String selectedRuleType = "南方规则";
     private BluetoothActionHandler bluetoothActionHandler;
 
     private AIEventListener aiEventListener;
 
-    private final PlayValidator playValidator = new PlayValidator();
+    private PlayValidator playValidator;
+    public void setSelectedRuleType(String ruleType) {
+        this.selectedRuleType = ruleType != null ? ruleType : "南方规则";
+    }
     private final Map<String, CountDownTimer> activeCountdowns = new HashMap<>();
     private static final long NO_PLAY_WAIT_MS = 3000;
     private CountdownUICallback countdownCallback;
@@ -110,7 +115,9 @@ public class GameController implements GameActionHandler {
 
         for (Player p : players) p.resetConsecutiveNoPlayCount();
 
-        RuleConfig ruleConfig = new RuleConfig();
+        this.ruleConfig = "北方规则".equals(selectedRuleType)
+                ? RuleConfig.NORTHERN : RuleConfig.SOUTHERN;
+        this.playValidator = new PlayValidator(ruleConfig);
         gameEngine.initializeGame(players, ruleConfig);
         gameEngine.dealCards();
         // 在 gameEngine.dealCards(); 之后添加
@@ -139,10 +146,14 @@ public class GameController implements GameActionHandler {
                 System.out.println("[CardGame][BLUETOOTH] Player types configured (multi) | "
                         + "local=" + myPlayerId + ", remote=" + remoteIds);
             } else {
-                gameEngine.configureBluetoothPlayerTypes(
-                        myPlayerId,
-                        "P1".equals(myPlayerId) ? "P2" : "P1"
-                );
+                // 没有真实远程玩家（纯 AI 局），P1=HUMAN，其余=AI
+                for (Player p : gameEngine.getGameState().getPlayers()) {
+                    if (p.getPlayerId().equals(myPlayerId)) {
+                        p.setType(PlayerType.HUMAN);
+                    } else {
+                        p.setType(PlayerType.AI);
+                    }
+                }
                 System.out.println("[CardGame][BLUETOOTH] Player types configured (legacy) | "
                         + "local=" + myPlayerId);
             }
@@ -182,7 +193,7 @@ public class GameController implements GameActionHandler {
         if (aiEventListener != null) {
             aiEventListener.unregister();
         }
-        AIDecisionStrategy strategy = new GreedyAIDecisionStrategy();
+        AIDecisionStrategy strategy = new GreedyAIDecisionStrategy(ruleConfig);
         aiEventListener = new AIEventListener(this, gameEngine, strategy);
         HermesLog.log("GameController: AIEventListener initialized");
     }
