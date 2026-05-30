@@ -13,4 +13,14 @@ public interface AIDecisionStrategy {
      * @return 要出的牌列表，null 或空列表表示过牌
      */
     List<Card> decidePlay(Player aiPlayer, GameState gameState);
+
+    /**
+     * 记录出牌失败（由外部调用）
+     */
+    void recordPlayFailure();
+
+    /**
+     * 重置失败计数（成功出牌后调用）
+     */
+    void resetFailCount();
 }

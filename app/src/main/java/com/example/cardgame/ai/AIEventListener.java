@@ -64,6 +64,15 @@ public class AIEventListener implements GameEventListener {
                             System.out.println("[AIEventListener] AI playing: " + cards);
                             PlayResult result = gameController.aiPlayCards(cards);
                             System.out.println("[AIEventListener] Result: " + result.isSuccess() + " - " + result.getMessage());
+                            
+                            // 处理出牌结果，更新失败计数
+                            if (result.isSuccess()) {
+                                // 成功出牌，重置失败计数
+                                strategy.resetFailCount();
+                            } else {
+                                // 出牌失败，增加失败计数
+                                strategy.recordPlayFailure();
+                            }
                         }
                     } catch (Exception e) {
                         System.err.println("[AIEventListener] Error: " + e.getMessage());
