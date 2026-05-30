@@ -20,10 +20,13 @@ public class MonteCarloAIDecisionStrategy implements AIDecisionStrategy {
     private final PhaseManager phaseManager;
     private final RuleEngine ruleEngine;
     private final CardTracker cardTracker = new CardTracker();
-    
+
     // AI玩家配置（默认最强）
     private AIPlayerProfile profile;
-    
+
+    // 对手风格档案（key=playerId, value=对手风格配置）
+    private Map<String, AIPlayerProfile> opponentProfiles = new HashMap<>();
+
     // 出牌失败计数（用于兜底逻辑）
     private int consecutiveFailCount = 0;
 
@@ -204,6 +207,7 @@ public class MonteCarloAIDecisionStrategy implements AIDecisionStrategy {
 
         PhaseManager.GamePhase phase = phaseManager.getCurrentPhase(aiPlayer, gameState);
         List<OpponentHandSampler.World> worlds = opponentHandSampler.sampleWorlds(aiPlayer, gameState, cardTracker, NUM_SAMPLES);
+        monteCarloSimulator.setOpponentProfiles(opponentProfiles);
 
         // 异步评估候选动作，避免阻塞主线程（但策略接口是同步的，我们内部使用超时）
         ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -287,6 +291,18 @@ public class MonteCarloAIDecisionStrategy implements AIDecisionStrategy {
      */
     public AIPlayerProfile getProfile() {
         return profile;
+    }
+
+    public AIPlayerProfile getOpponentProfile(String playerId) {
+        return opponentProfiles.get(playerId);
+    }
+
+    public void setOpponentProfile(String playerId, AIPlayerProfile opponentProfile) {
+        opponentProfiles.put(playerId, opponentProfile);
+    }
+
+    public Map<String, AIPlayerProfile> getOpponentProfiles() {
+        return opponentProfiles;
     }
 
     /**

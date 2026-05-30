@@ -46,6 +46,7 @@ import com.example.cardgame.event.CardPlayedEvent;
 import com.example.cardgame.event.PlayerPassedEvent;
 import com.example.cardgame.event.TurnChangedEvent;
 import com.example.cardgame.event.GameOverEvent;
+import com.example.cardgame.llm.LLMAnalyzer;
 
 public class GameActivity extends AppCompatActivity implements GameController.CountdownUICallback, GameEventListener {
 
@@ -219,6 +220,17 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
             startActivity(intent);
             finish();
         });
+
+        // 测试 vivo LLM 连接
+        new Thread(() -> {
+            try {
+                LLMAnalyzer analyzer = new LLMAnalyzer();
+                String result = analyzer.analyzeHand("♥2 ♣2 ♠K");
+                runOnUiThread(() -> Toast.makeText(GameActivity.this, "LLM 测试成功: " + result, Toast.LENGTH_LONG).show());
+            } catch (Exception e) {
+                runOnUiThread(() -> Toast.makeText(GameActivity.this, "LLM 测试失败: " + e.getMessage(), Toast.LENGTH_LONG).show());
+            }
+        }).start();
     }
 
     @Override
@@ -683,6 +695,9 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
                     refreshUI();
                 }
             });
+            if (gameActionHandler instanceof GameController) {
+                ((GameController) gameActionHandler).triggerOpponentAnalysis();
+            }
         }
     }
 }

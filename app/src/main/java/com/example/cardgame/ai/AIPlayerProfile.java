@@ -9,10 +9,13 @@ public class AIPlayerProfile {
     public static final int LEVEL_STRONG = 2;
 
     private int level;
-    private boolean keepBigPattern;      // 是否优先保留五张牌型
-    private double earlyConservative;    // 开局保守程度 0-1（1=最保守）
-    private double midAggression;        // 中盘进攻性 0-1（1=最激进）
-    private double lateFinishBonus;      // 残局直接出完奖励倍数
+    private boolean keepBigPattern;
+    private double earlyConservative;
+    private double midAggression;
+    private double lateFinishBonus;
+    private double opponentAggressiveness = 0.5;
+    private boolean opponentDefensive = false;
+    private boolean styleAnalyzed = false;
 
     public AIPlayerProfile(int level) {
         this.level = level;
@@ -62,5 +65,29 @@ public class AIPlayerProfile {
 
     public double getLateFinishBonus() {
         return lateFinishBonus;
+    }
+
+    public double getOpponentAggressiveness() {
+        return opponentAggressiveness;
+    }
+
+    public void setOpponentAggressiveness(double opponentAggressiveness) {
+        this.opponentAggressiveness = opponentAggressiveness;
+    }
+
+    public boolean isOpponentDefensive() {
+        return opponentDefensive;
+    }
+
+    public void setOpponentDefensive(boolean opponentDefensive) {
+        this.opponentDefensive = opponentDefensive;
+    }
+
+    public boolean isStyleAnalyzed() {
+        return styleAnalyzed;
+    }
+
+    public void setStyleAnalyzed(boolean styleAnalyzed) {
+        this.styleAnalyzed = styleAnalyzed;
     }
 }

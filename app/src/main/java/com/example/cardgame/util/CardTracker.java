@@ -4,13 +4,10 @@ import com.example.cardgame.model.Card;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * 记牌器 - 记录每张牌是否已打出、由谁打出
- * 用于对手手牌采样时排除已知不可能出现的牌
- */
 public class CardTracker {
     private Set<Card> playedCards = new HashSet<>();
     private Map<Card, String> playedBy = new HashMap<>();
+    private Map<String, List<String>> opponentHistory = new HashMap<>();
 
     public void onCardPlayed(Card card, String playerId) {
         playedCards.add(card);
@@ -21,6 +18,19 @@ public class CardTracker {
         for (Card card : cards) {
             onCardPlayed(card, playerId);
         }
+    }
+
+    public void recordPlay(String playerId, String playDescription) {
+        opponentHistory.computeIfAbsent(playerId, k -> new ArrayList<>()).add(playDescription);
+    }
+
+    public String getHistorySummary(String playerId) {
+        List<String> history = opponentHistory.get(playerId);
+        if (history == null || history.isEmpty()) return "";
+        int size = history.size();
+        int start = size > 20 ? size - 20 : 0;
+        List<String> recent = history.subList(start, size);
+        return String.join(", ", recent);
     }
 
     public List<Card> getRemainingCards(List<Card> allCards) {
@@ -44,6 +54,7 @@ public class CardTracker {
     public void reset() {
         playedCards.clear();
         playedBy.clear();
+        opponentHistory.clear();
     }
 
     public int getPlayedCount() {

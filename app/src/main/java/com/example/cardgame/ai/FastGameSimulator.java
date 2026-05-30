@@ -11,9 +11,14 @@ import java.util.*;
 public class FastGameSimulator {
 
     private final RuleEngine ruleEngine;
+    private Map<String, AIPlayerProfile> opponentProfiles = new HashMap<>();
 
     public FastGameSimulator(RuleEngine ruleEngine) {
         this.ruleEngine = ruleEngine;
+    }
+
+    public void setOpponentProfiles(Map<String, AIPlayerProfile> profiles) {
+        this.opponentProfiles = profiles != null ? profiles : new HashMap<>();
     }
 
     public int simulateToEnd(GameState state, String aiPlayerId) {
@@ -46,8 +51,11 @@ public class FastGameSimulator {
         Play lastPlay = state.getLastPlay();
         int handSize = hand.size();
 
-        // 使用增强的模拟对手策略
-        return SimulatedOpponentPolicy.decidePlay(hand, lastPlay, handSize, ruleEngine);
+        AIPlayerProfile profile = opponentProfiles.get(player.getPlayerId());
+        double aggressiveness = profile != null ? profile.getOpponentAggressiveness() : 0.5;
+        boolean defensive = profile != null && profile.isOpponentDefensive();
+
+        return SimulatedOpponentPolicy.decidePlay(hand, lastPlay, handSize, ruleEngine, aggressiveness, defensive);
     }
 
     /**
@@ -55,43 +63,49 @@ public class FastGameSimulator {
      */
     private static class SimulatedOpponentPolicy {
 
-        public static List<Card> decidePlay(List<Card> hand, Play lastPlay, int handSize, RuleEngine ruleEngine) {
+        public static List<Card> decidePlay(List<Card> hand, Play lastPlay, int handSize,
+                                           RuleEngine ruleEngine, double aggressiveness, boolean defensive) {
             boolean isLate = handSize <= 3;
             boolean firstTurn = (lastPlay == null || lastPlay.isEmpty());
 
-            // 无上家出牌：按阶段策略出牌
             if (firstTurn) {
-                return decideFirstPlay(hand, handSize);
+                return decideFirstPlay(hand, handSize, aggressiveness);
             }
 
-            // 残局：尽量出最小的合法牌，争取走完
             if (isLate) {
                 List<Card> smallest = findSmallestLegalPlay(hand, lastPlay, ruleEngine);
                 return smallest != null ? smallest : Collections.emptyList();
             }
 
-            // 中盘：能压就压，但避免浪费大牌（2、A除非必要）
+            if (defensive && aggressiveness < 0.4) {
+                return Collections.emptyList();
+            }
+
             List<Card> beatPlay = findSmallestBeatPlay(hand, lastPlay, ruleEngine);
             if (beatPlay != null && !beatPlay.isEmpty()) {
+                if (aggressiveness >= 0.7) {
+                    return beatPlay;
+                }
                 if (isWasteHighCard(beatPlay, hand) && hasAlternativePlay(hand, lastPlay, ruleEngine)) {
-                    return Collections.emptyList(); // 过牌，不浪费大牌
+                    return Collections.emptyList();
                 }
                 return beatPlay;
             }
 
-            return Collections.emptyList(); // pass
+            return Collections.emptyList();
         }
 
-        private static List<Card> decideFirstPlay(List<Card> hand, int handSize) {
-            // 残局优先出完
+        private static List<Card> decideFirstPlay(List<Card> hand, int handSize, double aggressiveness) {
             if (handSize == 1) {
                 return hand;
             }
-            // 两张且是对子，优先出
             if (handSize == 2 && isPair(hand)) {
                 return hand;
             }
-            // 出最小单张
+            if (aggressiveness >= 0.7) {
+                Card max = hand.stream().max(Comparator.comparingInt(c -> c.getRank().getWeight())).orElse(null);
+                return max == null ? Collections.emptyList() : Collections.singletonList(max);
+            }
             Card min = hand.stream().min(Comparator.comparingInt(c -> c.getRank().getWeight())).orElse(null);
             return min == null ? Collections.emptyList() : Collections.singletonList(min);
         }
