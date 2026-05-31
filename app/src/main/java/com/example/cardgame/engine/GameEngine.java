@@ -1,5 +1,6 @@
 // 【已修改，引入观察者模式基础框架】
 package com.example.cardgame.engine;
+import com.example.cardgame.rule.ConfigurableRuleEngine;
 
 import android.util.Log;
 import com.example.cardgame.dto.PassResult;
@@ -36,20 +37,27 @@ public class GameEngine {
     private final DealManager dealManager;
     private final TurnManager turnManager;
     private final SettlementManager settlementManager;
+    private List<Card> allPlayedCards = new ArrayList<>();
 
     public GameEngine() {
         this.dealManager = new DealManager();
         this.turnManager = new TurnManager();
         this.settlementManager = new SettlementManager();
-        this.ruleEngine = new RuleEngine();
     }
 
     public void initializeGame(List<Player> players, RuleConfig ruleConfig) {
         this.ruleConfig = ruleConfig;
+        this.ruleEngine = new ConfigurableRuleEngine(ruleConfig);
         this.gameState = new GameState();
         this.gameState.setPlayers(players);
         this.gameState.setGameOver(false);
         this.gameState.setOpeningTurn(true);
+        // 重置累计出牌记录，避免跨局污染
+        if (this.allPlayedCards != null) {
+            this.allPlayedCards.clear();
+        } else {
+            this.allPlayedCards = new ArrayList<>();
+        }
     }
 
     public void dealCards() {
@@ -89,6 +97,7 @@ public class GameEngine {
         Play currentPlay = new Play(playerId, selectedCards, finalPattern);
 
         player.getHandCards().removeIf(card -> selectedCardIds.contains(card.getCardId()));
+        allPlayedCards.addAll(selectedCards);
 
         gameState.setLastPlay(currentPlay);
         player.setPassed(false);
@@ -452,5 +461,9 @@ public class GameEngine {
         if (size == 3 && sameRank(cards)) return CardPattern.TRIPLE;
         if (size == 4 && sameRank(cards)) return CardPattern.QUADRUPLE;
         return CardPattern.INVALID;
+    }
+
+    public List<Card> getAllPlayedCards() {
+        return new ArrayList<>(allPlayedCards);
     }
 }

@@ -34,20 +34,28 @@ import java.util.stream.Collectors;
 public class GameController implements GameActionHandler {
 
     private final GameEngine gameEngine;
+    private RuleConfig ruleConfig;
     private final List<String> selectedCardIds = new ArrayList<>();
 
     private String myPlayerId = "P1";
     private boolean bluetoothMode = false;
     private boolean hostMode = false;
+    private String selectedRuleType = "南方规则";
     private BluetoothActionHandler bluetoothActionHandler;
 
     private AIEventListener aiEventListener;
     private AIDecisionStrategy aiStrategy;
 
-    private final PlayValidator playValidator = new PlayValidator();
+    private PlayValidator playValidator;
+    public void setSelectedRuleType(String ruleType) {
+        this.selectedRuleType = ruleType != null ? ruleType : "南方规则";
+    }
     private final Map<String, CountDownTimer> activeCountdowns = new HashMap<>();
     private static final long NO_PLAY_WAIT_MS = 3000;
     private CountdownUICallback countdownCallback;
+
+    private long lastTriggerTime = 0;
+    private static final long TRIGGER_COOLDOWN_MS = 1000;
 
     public interface CountdownUICallback {
         void showCountdown();
@@ -88,10 +96,13 @@ public class GameController implements GameActionHandler {
         if (!bluetoothMode) myPlayerId = "P1";
 
         List<Player> players = new ArrayList<>();
-        Player p1 = new Player("P1", "Alice");
-        Player p2 = new Player("P2", "Bob");
-        Player p3 = new Player("P3", "Cindy");
-        Player p4 = new Player("P4", "David");
+        Map<String, String> bluetoothNames = bluetoothMode && bluetoothActionHandler != null
+                ? bluetoothActionHandler.getPlayerNamesById()
+                : new HashMap<>();
+        Player p1 = new Player("P1", playerNameFor("P1", "Alice", bluetoothNames));
+        Player p2 = new Player("P2", playerNameFor("P2", "Bob", bluetoothNames));
+        Player p3 = new Player("P3", playerNameFor("P3", "Cindy", bluetoothNames));
+        Player p4 = new Player("P4", playerNameFor("P4", "David", bluetoothNames));
 
         if (bluetoothMode) {
             p1.setType(PlayerType.AI);
@@ -111,7 +122,9 @@ public class GameController implements GameActionHandler {
 
         for (Player p : players) p.resetConsecutiveNoPlayCount();
 
-        RuleConfig ruleConfig = new RuleConfig();
+        this.ruleConfig = "北方规则".equals(selectedRuleType)
+                ? RuleConfig.NORTHERN : RuleConfig.SOUTHERN;
+        this.playValidator = new PlayValidator(ruleConfig);
         gameEngine.initializeGame(players, ruleConfig);
         gameEngine.dealCards();
         // 在 gameEngine.dealCards(); 之后添加
@@ -140,10 +153,14 @@ public class GameController implements GameActionHandler {
                 System.out.println("[CardGame][BLUETOOTH] Player types configured (multi) | "
                         + "local=" + myPlayerId + ", remote=" + remoteIds);
             } else {
-                gameEngine.configureBluetoothPlayerTypes(
-                        myPlayerId,
-                        "P1".equals(myPlayerId) ? "P2" : "P1"
-                );
+                // 没有真实远程玩家（纯 AI 局），P1=HUMAN，其余=AI
+                for (Player p : gameEngine.getGameState().getPlayers()) {
+                    if (p.getPlayerId().equals(myPlayerId)) {
+                        p.setType(PlayerType.HUMAN);
+                    } else {
+                        p.setType(PlayerType.AI);
+                    }
+                }
                 System.out.println("[CardGame][BLUETOOTH] Player types configured (legacy) | "
                         + "local=" + myPlayerId);
             }
@@ -224,6 +241,11 @@ public class GameController implements GameActionHandler {
                 analyzer.analyzeAndUpdate(p.getPlayerId(), tracker, profile);
             }
         }
+    }
+
+    private String playerNameFor(String playerId, String fallback, Map<String, String> namesById) {
+        String name = namesById != null ? namesById.get(playerId) : null;
+        return name != null && !name.trim().isEmpty() ? name.trim() : fallback;
     }
 
     // ==================== 接口方法：供 UI 调用（显示字符串） ====================
@@ -395,11 +417,12 @@ public class GameController implements GameActionHandler {
                 state.getLastPlay() == null ? "" : state.getLastPlay().toString(),
                 gameEngine.isGameOver(),
                 gameEngine.isGameOver() && winner != null ? winner.getPlayerName() : "",
-                playerLastPlayCards);
+                playerLastPlayCards,
+                gameEngine.getAllPlayedCards());
     }
 
     private GameViewData emptyViewData() {
-        return new GameViewData("", "", new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), "", false, "", new HashMap<>());
+        return new GameViewData("", "", new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), "", false, "", new HashMap<>(), null);
     }
 
     private List<PlayerViewData> reorderPlayersForSelf(List<PlayerViewData> original, String myPlayerId) {
@@ -507,6 +530,12 @@ public class GameController implements GameActionHandler {
 
     // 注意：如果 GameActionHandler 接口中没有 triggerNextAction，请删除下面的 @Override
     public void triggerNextAction() {
+        long now = System.currentTimeMillis();
+        if (now - lastTriggerTime < TRIGGER_COOLDOWN_MS) {
+            return; // 1秒内重复调用则忽略
+        }
+        lastTriggerTime = now;
+
         if (gameEngine.isGameOver() || gameEngine.getGameState() == null) return;
         Player current = gameEngine.getGameState().getCurrentPlayer();
         if (current == null) return;

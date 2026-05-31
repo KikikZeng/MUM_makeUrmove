@@ -26,8 +26,12 @@ public class RoomSettingsActivity extends AppCompatActivity {
     private static final int REQUEST_DISCOVERABLE = 2003;
     private static final int DISCOVERABLE_DURATION_SECONDS = 300;
 
-    private RadioGroup rgRounds, rgRule, rgPlayStyle;
-    private CheckBox cbCardTracker, cbAntiCheat, cbTimeoutDismiss, cbSwapCards;
+    // 只保留规则选择
+    private RadioGroup rgRule;
+
+    // 道具选项：记牌器、透视、牌型提示
+    private CheckBox cbCardTracker, cbSeeThrough, cbPatternHint;
+
     private Button btnBack, btnStartBluetooth;
 
     private BluetoothActionHandler bluetoothActionHandler;
@@ -37,26 +41,28 @@ public class RoomSettingsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_room_settings);
-
+        boolean isPractice = getIntent().getBooleanExtra("is_practice", false);
         bluetoothActionHandler = CardGameApplication.getBluetoothActionHandler(this);
 
         TextView tvTitle = findViewById(R.id.tv_title);
         Typeface typeface = Typeface.createFromAsset(getAssets(), "my_custom_font.ttf");
         tvTitle.setTypeface(typeface);
 
-        rgRounds = findViewById(R.id.rg_rounds);
+        // 初始化控件
         rgRule = findViewById(R.id.rg_rule);
-        rgPlayStyle = findViewById(R.id.rg_play_style);
         cbCardTracker = findViewById(R.id.cb_card_tracker);
-        cbAntiCheat = findViewById(R.id.cb_anti_cheat);
-        cbTimeoutDismiss = findViewById(R.id.cb_timeout_dismiss);
-        cbSwapCards = findViewById(R.id.cb_swap_cards);
+        cbSeeThrough = findViewById(R.id.cb_see_through);
+        cbPatternHint = findViewById(R.id.cb_pattern_hint);
         btnBack = findViewById(R.id.btn_back_settings);
         btnStartBluetooth = findViewById(R.id.btn_start_bluetooth);
 
-        btnBack.setOnClickListener(v -> finish());
-
-        btnStartBluetooth.setOnClickListener(v -> startBluetoothRoomFlow());
+        if (isPractice) {
+            btnStartBluetooth.setText("开始游戏");
+            btnStartBluetooth.setOnClickListener(v -> startPracticeGame());
+        } else {
+            btnStartBluetooth.setText("开始蓝牙连接");
+            btnStartBluetooth.setOnClickListener(v -> startBluetoothRoomFlow());
+        }
     }
 
     private void startBluetoothRoomFlow() {
@@ -80,6 +86,30 @@ public class RoomSettingsActivity extends AppCompatActivity {
         }
 
         requestDiscoverableBeforeCreateRoom();
+    }
+
+    private void startPracticeGame() {
+        // 保存规则和道具设置
+        String selectedRule = getSelectedRule();
+        boolean cardTrackerEnabled = cbCardTracker.isChecked();
+        boolean seeThroughEnabled = cbSeeThrough.isChecked();
+        boolean patternHintEnabled = cbPatternHint.isChecked();
+
+        getSharedPreferences("game_prefs", MODE_PRIVATE)
+                .edit()
+                .putString("game_rule", selectedRule)
+                .putBoolean("prop_card_tracker", cardTrackerEnabled)
+                .putBoolean("prop_see_through", seeThroughEnabled)
+                .putBoolean("prop_pattern_hint", patternHintEnabled)
+                .apply();
+
+        Intent intent = new Intent(this, GameActivity.class);
+        intent.putExtra("is_bluetooth_game", false);
+        intent.putExtra("is_host", false);
+        intent.putExtra("local_player_id", "P1");
+        intent.putExtra("rule_type", selectedRule);
+        startActivity(intent);
+        finish();
     }
 
     private void requestEnableBluetooth() {
@@ -115,11 +145,27 @@ public class RoomSettingsActivity extends AppCompatActivity {
 
         Toast.makeText(this, "正在创建蓝牙房间，等待其他玩家加入...", Toast.LENGTH_SHORT).show();
 
+        // 存储用户选择的规则和道具（如果需要传递给房间大厅）
+        String selectedRule = getSelectedRule();
+        boolean cardTrackerEnabled = cbCardTracker.isChecked();
+        boolean seeThroughEnabled = cbSeeThrough.isChecked();
+        boolean patternHintEnabled = cbPatternHint.isChecked();
+
+        // 存入 SharedPreferences 或通过 Intent 传递
+        getSharedPreferences("game_prefs", MODE_PRIVATE)
+                .edit()
+                .putString("game_rule", selectedRule)
+                .putBoolean("prop_card_tracker", cardTrackerEnabled)
+                .putBoolean("prop_see_through", seeThroughEnabled)
+                .putBoolean("prop_pattern_hint", patternHintEnabled)
+                .apply();
+
         bluetoothActionHandler.createBluetoothRoom("P1");
 
         Intent intent = new Intent(RoomSettingsActivity.this, RoomLobbyActivity.class);
         intent.putExtra("is_host", true);
         intent.putExtra("local_player_id", "P1");
+        intent.putExtra("rule_type", getSelectedRule());
         startActivity(intent);
         finish();
     }
@@ -166,24 +212,10 @@ public class RoomSettingsActivity extends AppCompatActivity {
         }
     }
 
-    private int getSelectedRounds() {
-        int checkedId = rgRounds.getCheckedRadioButtonId();
-        if (checkedId == R.id.rb_8_rounds) return 8;
-        if (checkedId == R.id.rb_32_rounds) return 32;
-        return 16;
-    }
-
     private String getSelectedRule() {
         int checkedId = rgRule.getCheckedRadioButtonId();
         if (checkedId == R.id.rb_south_rule) return "南方规则";
         if (checkedId == R.id.rb_north_rule) return "北方规则";
         return "南方规则";
-    }
-
-    private String getSelectedPlayStyle() {
-        int checkedId = rgPlayStyle.getCheckedRadioButtonId();
-        if (checkedId == R.id.rb_soft) return "软锄";
-        if (checkedId == R.id.rb_hard) return "硬锄";
-        return "软锄";
     }
 }
