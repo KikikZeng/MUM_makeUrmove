@@ -14,15 +14,45 @@ public class CandidateGenerator {
 
     private final RuleEngine ruleEngine;
     private final int topK;
+    private PhaseManager phaseManager;
+    private AIPlayerProfile profile;
 
+    // 原有构造函数（兼容旧调用）
     public CandidateGenerator(RuleEngine ruleEngine, int topK) {
+        this(ruleEngine, topK, null, null);
+    }
+
+    // 新构造函数，用于注入保牌逻辑所需的对象
+    public CandidateGenerator(RuleEngine ruleEngine, int topK, PhaseManager phaseManager, AIPlayerProfile profile) {
         this.ruleEngine = ruleEngine;
         this.topK = topK;
+        this.phaseManager = phaseManager;
+        this.profile = profile;
     }
+
+    // 添加设置方法（可选）
+    public void setPhaseManager(PhaseManager phaseManager) { this.phaseManager = phaseManager; }
+    public void setProfile(AIPlayerProfile profile) { this.profile = profile; }
 
     public List<Play> generate(List<Card> hand, Play lastPlay, boolean isFirstRound, boolean isFirstTurn) {
         List<Play> allLegal = getAllLegalPlays(hand, lastPlay, isFirstRound, isFirstTurn);
         if (allLegal.isEmpty()) return Collections.emptyList();
+
+        // ===== 保牌型过滤 =====
+        if (profile != null && profile.isKeepBigPattern() && phaseManager != null) {
+            List<Play> filtered = new ArrayList<>();
+            for (Play play : allLegal) {
+                List<Card> remaining = new ArrayList<>(hand);
+                remaining.removeAll(play.getCards());
+                if (!phaseManager.wouldBreakBigPattern(hand, remaining)) {
+                    filtered.add(play);
+                }
+            }
+            // 如果过滤后为空，则退回到不过滤（避免无动作可出）
+            if (!filtered.isEmpty()) {
+                allLegal = filtered;
+            }
+        }
 
         allLegal.sort((p1, p2) -> {
             double s1 = heuristicScore(hand, p1);

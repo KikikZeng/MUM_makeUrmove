@@ -21,12 +21,14 @@ public class GreedyAIDecisionStrategy implements AIDecisionStrategy {
     private final PatternRecognizer patternRecognizer;
     private final PlayValidator playValidator;
 
+    // 出牌失败计数（用于兜底逻辑）
+    private int consecutiveFailCount = 0;
+
     public GreedyAIDecisionStrategy(RuleConfig config) {
         this.config = config;
         this.patternRecognizer = new PatternRecognizer(config);
         this.playValidator = new PlayValidator(config);
     }
-
 
     @Override
     public List<Card> decidePlay(Player aiPlayer, GameState gameState) {
@@ -124,5 +126,16 @@ public class GreedyAIDecisionStrategy implements AIDecisionStrategy {
             }
         }
         return filtered;
+    }
+
+    @Override
+    public void recordPlayFailure() {
+        consecutiveFailCount++;
+        System.out.println("[GreedyAI] 出牌失败，连续失败次数: " + consecutiveFailCount);
+    }
+
+    @Override
+    public void resetFailCount() {
+        consecutiveFailCount = 0;
     }
 }

@@ -6,6 +6,7 @@ import android.os.Looper;
 
 import com.example.cardgame.ai.AIDecisionStrategy;
 import com.example.cardgame.ai.AIEventListener;
+import com.example.cardgame.ai.AIPlayerProfile;
 import com.example.cardgame.ai.GreedyAIDecisionStrategy;
 import com.example.cardgame.dto.GameViewData;
 import com.example.cardgame.dto.PassResult;
@@ -14,12 +15,14 @@ import com.example.cardgame.dto.PlayerViewData;
 import com.example.cardgame.engine.GameEngine;
 import com.example.cardgame.event.EventBus;
 import com.example.cardgame.event.TurnChangedEvent;
+import com.example.cardgame.llm.OpponentStyleAnalyzer;
 import com.example.cardgame.model.Card;
 import com.example.cardgame.model.GameState;
 import com.example.cardgame.model.Player;
 import com.example.cardgame.model.PlayerType;
 import com.example.cardgame.rule.PlayValidator;
 import com.example.cardgame.rule.RuleConfig;
+import com.example.cardgame.util.CardTracker;
 import com.example.cardgame.util.HermesLog;
 
 import java.util.ArrayList;
@@ -41,6 +44,7 @@ public class GameController implements GameActionHandler {
     private BluetoothActionHandler bluetoothActionHandler;
 
     private AIEventListener aiEventListener;
+    private AIDecisionStrategy aiStrategy;
 
     private PlayValidator playValidator;
     public void setSelectedRuleType(String ruleType) {
@@ -193,12 +197,50 @@ public class GameController implements GameActionHandler {
     }
 
     private void initAIEventListener() {
-        if (aiEventListener != null) {
-            aiEventListener.unregister();
+        if (aiEventListener != null) aiEventListener.unregister();
+        aiStrategy = new MonteCarloAIDecisionStrategy();
+        aiEventListener = new AIEventListener(this, gameEngine, aiStrategy);
+        HermesLog.log("GameController: MonteCarlo AI Strategy initialized");
+    }
+
+    public CardTracker getCardTracker() {
+        if (aiStrategy instanceof MonteCarloAIDecisionStrategy) {
+            return ((MonteCarloAIDecisionStrategy) aiStrategy).getCardTracker();
         }
-        AIDecisionStrategy strategy = new GreedyAIDecisionStrategy(ruleConfig);
-        aiEventListener = new AIEventListener(this, gameEngine, strategy);
-        HermesLog.log("GameController: AIEventListener initialized");
+        return null;
+    }
+
+    private void recordPlayToTracker(String playerId, List<Card> cards) {
+        CardTracker tracker = getCardTracker();
+        if (tracker == null || cards == null || cards.isEmpty()) return;
+        StringBuilder desc = new StringBuilder();
+        for (Card c : cards) {
+            if (desc.length() > 0) desc.append(",");
+            desc.append(c.getSuit().getSymbol()).append(c.getRank().getDisplayName());
+        }
+        tracker.recordPlay(playerId, desc.toString());
+    }
+
+    public void triggerOpponentAnalysis() {
+        CardTracker tracker = getCardTracker();
+        if (tracker == null) return;
+        if (!(aiStrategy instanceof MonteCarloAIDecisionStrategy)) return;
+        MonteCarloAIDecisionStrategy mcStrategy = (MonteCarloAIDecisionStrategy) aiStrategy;
+        OpponentStyleAnalyzer analyzer = new OpponentStyleAnalyzer();
+        GameState state = gameEngine.getGameState();
+        if (state == null) return;
+        for (Player p : state.getPlayers()) {
+            if (p.getType() == PlayerType.AI) {
+                String history = tracker.getHistorySummary(p.getPlayerId());
+                if (history.isEmpty()) continue;
+                AIPlayerProfile profile = mcStrategy.getOpponentProfile(p.getPlayerId());
+                if (profile == null) {
+                    profile = new AIPlayerProfile(AIPlayerProfile.LEVEL_NORMAL);
+                    mcStrategy.setOpponentProfile(p.getPlayerId(), profile);
+                }
+                analyzer.analyzeAndUpdate(p.getPlayerId(), tracker, profile);
+            }
+        }
     }
 
     private String playerNameFor(String playerId, String fallback, Map<String, String> namesById) {
@@ -236,6 +278,16 @@ public class GameController implements GameActionHandler {
 
         PlayResult result = gameEngine.playCards(currentPlayer.getPlayerId(), cardsToPlay);
         if (result.isSuccess()) {
+            List<Card> playedCards = new ArrayList<>();
+            for (String cardId : cardsToPlay) {
+                for (Card c : me.getHandCards()) {
+                    if (c.getCardId().equals(cardId)) {
+                        playedCards.add(c);
+                        break;
+                    }
+                }
+            }
+            recordPlayToTracker(currentPlayer.getPlayerId(), playedCards);
             selectedCardIds.clear();
             currentPlayer.resetConsecutiveNoPlayCount();
             cancelCountdown(currentPlayer);
@@ -274,6 +326,7 @@ public class GameController implements GameActionHandler {
             System.out.println("[CardGame][AI] aiPlayCards FAILED: " + result.getMessage());
         }
         if (result.isSuccess()) {
+            recordPlayToTracker(currentPlayer.getPlayerId(), cards);
             currentPlayer.resetConsecutiveNoPlayCount();
             cancelCountdown(currentPlayer);
 

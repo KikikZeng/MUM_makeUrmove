@@ -14,6 +14,10 @@ public class MonteCarloSimulator {
         this.numSamples = numSamples;
     }
 
+    public void setOpponentProfiles(Map<String, AIPlayerProfile> profiles) {
+        fastSimulator.setOpponentProfiles(profiles);
+    }
+
     public double evaluate(Play candidate, Player aiPlayer, GameState currentState,
                            List<OpponentHandSampler.World> worlds) {
         double totalScore = 0.0;

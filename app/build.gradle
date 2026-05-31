@@ -9,6 +9,10 @@ android {
 
     buildToolsVersion "36.1.0"
 
+    buildFeatures {
+        buildConfig true
+    }
+
     defaultConfig {
         applicationId "com.example.cardgame"
         minSdk 24
@@ -17,6 +21,11 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        def apiKey = project.properties.get('DEEPSEEK_API_KEY') ?: ''
+        buildConfigField "String", "DEEPSEEK_API_KEY", "\"$apiKey\""
+        // 临时测试：使用硬编码值
+        buildConfigField "String", "VIVO_APP_KEY", "\"sk-xuanji-2026006675-cnl6U3V3QlVsTVBCZUlBeA==\""
     }
 
     buildTypes {
@@ -38,6 +47,7 @@ dependencies {
     implementation libs.activity
     implementation libs.constraintlayout
     implementation 'com.google.code.gson:gson:2.10.1'
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core

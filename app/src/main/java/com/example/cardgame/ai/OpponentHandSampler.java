@@ -1,6 +1,7 @@
 package com.example.cardgame.ai;
 
 import com.example.cardgame.model.*;
+import com.example.cardgame.util.CardTracker;
 import java.util.*;
 
 public class OpponentHandSampler {
@@ -12,18 +13,15 @@ public class OpponentHandSampler {
         }
     }
 
-    public List<World> sampleWorlds(Player aiPlayer, GameState gameState, int numSamples) {
+    public List<World> sampleWorlds(Player aiPlayer, GameState gameState, CardTracker cardTracker, int numSamples) {
         List<World> worlds = new ArrayList<>();
 
         // 所有牌
         Set<Card> allCards = getAllCards();
         // 去掉AI手牌
         allCards.removeAll(aiPlayer.getHandCards());
-        // 去掉已打出的牌
-        Set<Card> playedCards = new HashSet<>();
-        for (List<Card> cards : gameState.getLastPlayByPlayer().values()) {
-            if (cards != null) playedCards.addAll(cards);
-        }
+        // 去掉已打出的牌（使用CardTracker）
+        Set<Card> playedCards = new HashSet<>(cardTracker.getPlayedCards());
         allCards.removeAll(playedCards);
         List<Card> remaining = new ArrayList<>(allCards);
 
