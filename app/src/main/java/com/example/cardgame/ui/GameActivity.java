@@ -278,12 +278,7 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
 
         Button btnExitGame = findViewById(R.id.btn_exit_game);
         btnExitGame.setOnClickListener(v -> {
-            bluetoothRefreshHandler.removeCallbacks(bluetoothRefreshRunnable);
-
-            Intent intent = new Intent(GameActivity.this, MainActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            startActivity(intent);
-            finish();
+            showExitGameConfirmDialog();
         });
 
         // 测试 vivo LLM 连接
@@ -308,6 +303,27 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
     }
 
     @Override
+    public void onBackPressed() {
+        showExitGameConfirmDialog();
+    }
+
+    private void showExitGameConfirmDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Exit game?")
+                .setMessage("Current match is still running.")
+                .setPositiveButton("Exit", (dialog, which) -> {
+                    bluetoothRefreshHandler.removeCallbacks(bluetoothRefreshRunnable);
+
+                    Intent intent = new Intent(GameActivity.this, MainActivity.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    startActivity(intent);
+                    finish();
+                })
+                .setNegativeButton("Stay", null)
+                .show();
+    }
+
+    @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
         if (hasFocus) {
@@ -328,6 +344,15 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
     }
 
     private void fullRefresh() {
+        try {
+            doFullRefresh();
+        } catch (Exception e) {
+            Log.e("GameActivity", "fullRefresh failed", e);
+            Toast.makeText(this, "刷新牌局失败：" + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void doFullRefresh() {
         if (gameActionHandler == null) return;
 
         GameViewData data = gameActionHandler.getGameViewData();
@@ -345,7 +370,7 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
 
         updateOpponentsFromViewData(data);
         updatePlayAreas(data);
-        // updateActionButtons(data);  // 已由 TurnChangedEvent 直接控制
+        updateActionButtons(data);
 
         if (cardAdapter == null) {
             cardAdapter = new CardAdapter(this, handCards, position -> {

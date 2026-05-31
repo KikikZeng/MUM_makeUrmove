@@ -1,7 +1,9 @@
 package com.example.cardgame.ai;
 
 import com.example.cardgame.model.*;
+import com.example.cardgame.rule.ConfigurableRuleEngine;
 import com.example.cardgame.rule.PlayValidator;
+import com.example.cardgame.rule.RuleConfig;
 import com.example.cardgame.rule.RuleEngine;
 import com.example.cardgame.util.CardTracker;
 import java.util.*;
