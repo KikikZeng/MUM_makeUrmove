@@ -68,10 +68,12 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
     private LinearLayout playAreaTop;
     private LinearLayout playAreaLeft;
     private LinearLayout playAreaRight;
+    private LinearLayout playCardsContainer;
+    private LinearLayout actionButtonsContainer;
     private RuleConfig ruleConfig;
     private boolean gameOverDialogShown = false;
     private boolean enableAiAssistant = false;
-    private static final float CARD_WIDTH_DP = 50f;;
+    private static final float CARD_WIDTH_DP = 50f;
     private static final float CARD_OVERLAP_DP = -8f;
     @Nullable
     private GameActionHandler gameActionHandler;
@@ -84,8 +86,6 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
     private final Handler bluetoothRefreshHandler = new Handler(Looper.getMainLooper());
     // 倒计时 UI 控件
     private TextView tvCountdown;
-    private LinearLayout actionButtonsContainer;
-    private LinearLayout playCardsContainer;
     private Button btnPlayInline;
     private Button btnPassInline;
     // 道具栏控件
@@ -98,7 +98,6 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
     private TextView tvPropTracker;
     private TextView tvPropSeeThrough;
     private TextView tvPropPatternHint;
-
     // 道具可用状态
     private boolean isTrackerEnabled = false;
     private boolean isSeeThroughEnabled = false;
@@ -118,7 +117,6 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
                     gameActionHandler.triggerNextAction();
                 }
             }
-
             bluetoothRefreshHandler.postDelayed(this, 1000);
         }
     };
@@ -139,9 +137,6 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
         // 初始化内联按钮
         actionButtonsContainer = findViewById(R.id.action_buttons_container);
         playCardsContainer = findViewById(R.id.play_cards_container);
-
-        Log.d("CardGame", "actionButtonsContainer=" + actionButtonsContainer);
-        Log.d("CardGame", "playCardsContainer=" + playCardsContainer);
         btnPlayInline = findViewById(R.id.btn_play_inline);
         btnPassInline = findViewById(R.id.btn_pass_inline);
 
@@ -170,12 +165,18 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
                 }
             });
         }
+
         gameActionHandler = CardGameApplication.getGameActionHandler();
         Log.d("GameActivity", "gameActionHandler = " + gameActionHandler);
 
-        // 设置倒计时回调（如果 GameActionHandler 是 GameController 实例）
+        // 设置倒计时回调，并初始化自适应 AI（如果启用）
         if (gameActionHandler instanceof GameController) {
-            ((GameController) gameActionHandler).setCountdownCallback(this);
+            GameController gameController = (GameController) gameActionHandler;
+            gameController.setCountdownCallback(this);
+            // 初始化自适应 AI
+            gameController.initAdaptiveAI(getApplicationContext());
+            gameController.setAIDifficulty(com.example.cardgame.ai.AIDifficulty.ADAPTIVE);
+            Log.d("GameActivity", "Adaptive AI initialized with ADAPTIVE difficulty");
         }
 
         isBluetoothGame = getIntent().getBooleanExtra("is_bluetooth_game", false);
@@ -230,7 +231,6 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
 
         if (gameActionHandler != null) {
             bluetoothActionHandler = CardGameApplication.getBluetoothActionHandler(this);
-
             gameActionHandler.setBluetoothActionHandler(bluetoothActionHandler);
 
             if (isBluetoothGame) {
@@ -265,7 +265,6 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
             useMockDataForDemo();
             Toast.makeText(this, "模拟数据模式（UI演示）", Toast.LENGTH_LONG).show();
         }
-
 
         Button btnExitGame = findViewById(R.id.btn_exit_game);
         btnExitGame.setOnClickListener(v -> {
@@ -308,11 +307,18 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        Log.d("GameActivity", "onDestroy() called, cleaning up resources...");
         EventBus.getInstance().unregister(this);
         bluetoothRefreshHandler.removeCallbacks(bluetoothRefreshRunnable);
+        if (gameActionHandler instanceof GameController) {
+            Log.d("GameActivity", "Calling cleanupAdaptiveAI() on GameController");
+            ((GameController) gameActionHandler).cleanupAdaptiveAI();
+            Log.d("GameActivity", "cleanupAdaptiveAI() completed");
+        }
         if (isFinishing()) {
             closeBluetoothSessionIfNeeded();
         }
+        Log.d("GameActivity", "onDestroy() finished");
     }
 
     @Override
@@ -430,12 +436,6 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
             return;
         }
 
-        // 打印每个玩家的信息
-        for (PlayerViewData p : players) {
-            Log.d("CardGame", "Player: " + p.getPlayerId() + ", isPassed=" + p.isPassed()
-                    + ", cards=" + playerLastPlayCards.get(p.getPlayerId()));
-        }
-
         // 自己的出牌区（独立处理）
         renderSelfPlayArea(players.get(0), playerLastPlayCards);
         // 其他玩家的出牌区
@@ -443,7 +443,6 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
         renderPlayerArea(playAreaTop, players.get(2), playerLastPlayCards);
         renderPlayerArea(playAreaRight, players.get(3), playerLastPlayCards);
     }
-
 
     private void updateActionButtons(GameViewData data) {
         if (data == null) return;
@@ -491,7 +490,6 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
                                   Map<String, List<String>> lastPlayCards) {
         if (area == null) return;
 
-        // 其他玩家的出牌区（原有逻辑）
         area.removeAllViews();
         area.setGravity(Gravity.CENTER);
 
@@ -506,6 +504,34 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
             area.addView(textView);
         } else if (cards != null && !cards.isEmpty()) {
             renderCardsToArea(area, cards);
+        }
+    }
+
+    private void renderSelfPlayArea(PlayerViewData player, Map<String, List<String>> lastPlayCards) {
+        if (playCardsContainer == null) return;
+
+        Log.d("CardGame", "renderSelfPlayArea called for player=" + player.getPlayerId()
+                + ", isPassed=" + player.isPassed());
+
+        playCardsContainer.removeAllViews();
+        playCardsContainer.setGravity(Gravity.CENTER);
+
+        List<String> cards = lastPlayCards.get(player.getPlayerId());
+        Log.d("CardGame", "renderSelfPlayArea: cards=" + cards);
+
+        if ((cards == null || cards.isEmpty()) && player.isPassed()) {
+            TextView textView = new TextView(this);
+            textView.setText("不出");
+            textView.setTextColor(getColor(android.R.color.white));
+            textView.setTextSize(18f);
+            textView.setGravity(Gravity.CENTER);
+            playCardsContainer.addView(textView);
+            Log.d("CardGame", "renderSelfPlayArea: showing '不出'");
+        } else if (cards != null && !cards.isEmpty()) {
+            renderCardsToContainer(playCardsContainer, cards);
+            Log.d("CardGame", "renderSelfPlayArea: showing " + cards.size() + " cards");
+        } else {
+            Log.d("CardGame", "renderSelfPlayArea: no cards and not passed, showing nothing");
         }
     }
 
@@ -553,41 +579,6 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
         }
     }
 
-    private void clearPlayAreas() {
-        if (playAreaTop != null) playAreaTop.removeAllViews();
-        if (playAreaLeft != null) playAreaLeft.removeAllViews();
-        if (playAreaRight != null) playAreaRight.removeAllViews();
-        // 注意：不清理 playAreaSelf，因为自己的区域由 playCardsContainer 独立管理
-    }
-
-    private void renderSelfPlayArea(PlayerViewData player, Map<String, List<String>> lastPlayCards) {
-        if (playCardsContainer == null) return;
-
-        Log.d("CardGame", "renderSelfPlayArea called for player=" + player.getPlayerId()
-                + ", isPassed=" + player.isPassed());
-
-        playCardsContainer.removeAllViews();
-        playCardsContainer.setGravity(Gravity.CENTER);
-
-        List<String> cards = lastPlayCards.get(player.getPlayerId());
-        Log.d("CardGame", "renderSelfPlayArea: cards=" + cards);
-
-        if ((cards == null || cards.isEmpty()) && player.isPassed()) {
-            TextView textView = new TextView(this);
-            textView.setText("不出");
-            textView.setTextColor(getColor(android.R.color.white));
-            textView.setTextSize(18f);
-            textView.setGravity(Gravity.CENTER);
-            playCardsContainer.addView(textView);
-            Log.d("CardGame", "renderSelfPlayArea: showing '不出'");
-        } else if (cards != null && !cards.isEmpty()) {
-            renderCardsToContainer(playCardsContainer, cards);
-            Log.d("CardGame", "renderSelfPlayArea: showing " + cards.size() + " cards");
-        } else {
-            Log.d("CardGame", "renderSelfPlayArea: no cards and not passed, showing nothing");
-        }
-    }
-
     private void renderCardsToContainer(LinearLayout container, List<String> cards) {
         if (container == null) return;
 
@@ -632,38 +623,31 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
         }
     }
 
+    private void clearPlayAreas() {
+        if (playAreaTop != null) playAreaTop.removeAllViews();
+        if (playAreaLeft != null) playAreaLeft.removeAllViews();
+        if (playAreaRight != null) playAreaRight.removeAllViews();
+        // 注意：不清理 playAreaSelf，因为自己的区域由 playCardsContainer 独立管理
+    }
+
     private int getCardRankWeight(String cardId) {
         if (cardId == null || cardId.length() < 2) return 0;
         String rank = cardId.substring(1);
         switch (rank) {
-            case "2":
-                return 13;
-            case "A":
-                return 12;
-            case "K":
-                return 11;
-            case "Q":
-                return 10;
-            case "J":
-                return 9;
-            case "10":
-                return 8;
-            case "9":
-                return 7;
-            case "8":
-                return 6;
-            case "7":
-                return 5;
-            case "6":
-                return 4;
-            case "5":
-                return 3;
-            case "4":
-                return 2;
-            case "3":
-                return 1;
-            default:
-                return 0;
+            case "2": return 13;
+            case "A": return 12;
+            case "K": return 11;
+            case "Q": return 10;
+            case "J": return 9;
+            case "10": return 8;
+            case "9": return 7;
+            case "8": return 6;
+            case "7": return 5;
+            case "6": return 4;
+            case "5": return 3;
+            case "4": return 2;
+            case "3": return 1;
+            default: return 0;
         }
     }
 
@@ -673,43 +657,22 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
 
         String suitPart;
         char suitChar = cardId.charAt(0);
-
         switch (suitChar) {
-            case '♥':
-                suitPart = "heart";
-                break;
-            case '♠':
-                suitPart = "spade";
-                break;
-            case '♦':
-                suitPart = "diamond";
-                break;
-            case '♣':
-                suitPart = "club";
-                break;
-            default:
-                return 0;
+            case '♥': suitPart = "heart"; break;
+            case '♠': suitPart = "spade"; break;
+            case '♦': suitPart = "diamond"; break;
+            case '♣': suitPart = "club"; break;
+            default: return 0;
         }
 
         String rank = cardId.substring(1);
         String rankPart;
-
         switch (rank) {
-            case "A":
-                rankPart = "ace";
-                break;
-            case "J":
-                rankPart = "jack";
-                break;
-            case "Q":
-                rankPart = "queen";
-                break;
-            case "K":
-                rankPart = "king";
-                break;
-            default:
-                rankPart = rank;
-                break;
+            case "A": rankPart = "ace"; break;
+            case "J": rankPart = "jack"; break;
+            case "Q": rankPart = "queen"; break;
+            case "K": rankPart = "king"; break;
+            default: rankPart = rank; break;
         }
 
         String fileName = suitPart + "_" + rankPart;
@@ -776,13 +739,11 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
 
         Log.d("CenterDebug", "牌数=" + handCards.size() + ", 期望左边距=" + expectedLeftMargin);
 
-        // 使用 setX 直接设置绝对位置
         rvHandCards.setX(expectedLeftMargin);
     }
 
     private List<String> generateRandomHand() {
         List<String> allCards = new ArrayList<>();
-
         String[] suits = {"♥", "♠", "♦", "♣"};
         String[] ranks = {"A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"};
 
@@ -794,22 +755,18 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
 
         List<String> hand = new ArrayList<>();
         Random random = new Random();
-
         for (int i = 0; i < 13; i++) {
             int index = random.nextInt(allCards.size());
             hand.add(allCards.remove(index));
         }
-
         return hand;
     }
 
     private void sortHandByRule(List<String> hand) {
-        // 获取 ruleConfig 中的权重映射
         RuleConfig activeRuleConfig = ensureRuleConfigReady();
         Map<Rank, Integer> rankWeights = activeRuleConfig.rankWeights;
         Map<Suit, Integer> suitWeights = activeRuleConfig.suitWeights;
 
-        // 辅助方法：将显示字符串转为 Rank 和 Suit
         hand.sort((card1, card2) -> {
             String suitSym1 = card1.substring(0, 1);
             String rankStr1 = card1.substring(1);
@@ -823,12 +780,12 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
 
             int w1 = rankWeights.get(rank1);
             int w2 = rankWeights.get(rank2);
-            int rankCompare = Integer.compare(w2, w1);  // 降序
+            int rankCompare = Integer.compare(w2, w1);
             if (rankCompare != 0) return rankCompare;
 
             int s1 = suitWeights.get(suit1);
             int s2 = suitWeights.get(suit2);
-            return Integer.compare(s2, s1);  // 降序
+            return Integer.compare(s2, s1);
         });
     }
 
@@ -839,7 +796,6 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
         return ruleConfig;
     }
 
-    // 辅助转换方法
     private Rank rankFromString(String rankStr) {
         switch (rankStr) {
             case "2": return Rank.TWO;
@@ -887,7 +843,6 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
     }
 
     private void initPropBar() {
-        // 获取控件
         propCardTracker = findViewById(R.id.prop_card_tracker);
         propSeeThrough = findViewById(R.id.prop_see_through);
         propPatternHint = findViewById(R.id.prop_pattern_hint);
@@ -898,14 +853,11 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
         tvPropSeeThrough = findViewById(R.id.tv_prop_see_through);
         tvPropPatternHint = findViewById(R.id.tv_prop_pattern_hint);
 
-        // 读取房间设置
         SharedPreferences prefs = getSharedPreferences("game_prefs", MODE_PRIVATE);
-        // 统一从 SharedPreferences 读取道具设置（练习场和蓝牙模式都读取）
         isTrackerEnabled = prefs.getBoolean("prop_card_tracker", false);
         isSeeThroughEnabled = prefs.getBoolean("prop_see_through", false);
         isPatternHintEnabled = prefs.getBoolean("prop_pattern_hint", false);
 
-        // 如果是练习场且用户从未保存过任何道具设置（三个都是false），则默认全部启用，保证原有体验
         if (!isBluetoothGame && !isTrackerEnabled && !isSeeThroughEnabled && !isPatternHintEnabled) {
             isTrackerEnabled = true;
             isSeeThroughEnabled = true;
@@ -917,10 +869,8 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
         Log.d("PropDebug", "seeThrough=" + isSeeThroughEnabled);
         Log.d("PropDebug", "patternHint=" + isPatternHintEnabled);
 
-        // 更新 UI 颜色和可用性
         updatePropUI();
 
-        // 设置点击事件
         propCardTracker.setOnClickListener(v -> {
             if (isTrackerEnabled) {
                 if (cardTrackerLayout.getVisibility() == View.VISIBLE) {
@@ -936,7 +886,6 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
 
         propSeeThrough.setOnClickListener(v -> {
             if (isSeeThroughEnabled) {
-                // 透视道具：显示幽默弹窗
                 new AlertDialog.Builder(this)
                         .setTitle("🔮 透视")
                         .setMessage("你运气不错！🎉\n\n（这只是个玩笑，并没有真正的透视功能！）")
@@ -947,14 +896,13 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
             }
         });
 
-        // ========== 牌型提示道具：点击显示/隐藏提示条，并更新高亮 ==========
         propPatternHint.setOnClickListener(v -> {
             if (isPatternHintEnabled) {
                 if (patternHintBar.getVisibility() == View.VISIBLE) {
                     patternHintBar.setVisibility(View.GONE);
                 } else {
                     patternHintBar.setVisibility(View.VISIBLE);
-                    updatePatternHint(); // 显示时立即更新当前选中的牌型
+                    updatePatternHint();
                 }
             } else {
                 Toast.makeText(this, "房间未开启牌型提示道具", Toast.LENGTH_SHORT).show();
@@ -963,7 +911,6 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
     }
 
     private void updatePropUI() {
-        // 记牌器
         if (isTrackerEnabled) {
             propCardTracker.setEnabled(true);
             ivPropTracker.setColorFilter(Color.parseColor("#FFD700"));
@@ -974,7 +921,6 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
             tvPropTracker.setTextColor(Color.parseColor("#888888"));
         }
 
-        // 透视
         if (isSeeThroughEnabled) {
             propSeeThrough.setEnabled(true);
             ivPropSeeThrough.setColorFilter(Color.parseColor("#FFD700"));
@@ -985,7 +931,6 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
             tvPropSeeThrough.setTextColor(Color.parseColor("#888888"));
         }
 
-        // 牌型提示
         if (isPatternHintEnabled) {
             propPatternHint.setEnabled(true);
             ivPropPatternHint.setColorFilter(Color.parseColor("#FFD700"));
@@ -1028,7 +973,6 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
             case "3": rank = Rank.THREE; break;
             default: return null;
         }
-
         return new Card(null, suit, rank);
     }
 
@@ -1036,7 +980,6 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
         if (patternHintBar == null || patternHintBar.getVisibility() != View.VISIBLE) return;
         if (!isPatternHintEnabled) return;
 
-        // 重置所有文字为灰色
         setAllHintTextColor(Color.parseColor("#888888"));
 
         if (selectedCardIds == null || selectedCardIds.isEmpty()) return;
@@ -1054,32 +997,15 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
         if (info.getType() == PatternRecognizer.PatternType.INVALID) return;
 
         switch (info.getType()) {
-            case SINGLE:
-                hintSingle.setTextColor(Color.parseColor("#FFD700"));
-                break;
-            case PAIR:
-                hintPair.setTextColor(Color.parseColor("#FFD700"));
-                break;
-            case TRIPLE:
-                hintTriple.setTextColor(Color.parseColor("#FFD700"));
-                break;
-            case STRAIGHT:
-                hintStraight.setTextColor(Color.parseColor("#FFD700"));
-                break;
-            case FLUSH:
-                hintFlush.setTextColor(Color.parseColor("#FFD700"));
-                break;
-            case IRON_BRANCH:
-                hintIron.setTextColor(Color.parseColor("#FFD700"));
-                break;
-            case STRAIGHT_FLUSH:
-                hintStraightFlush.setTextColor(Color.parseColor("#FFD700"));
-                break;
-            case FULL_HOUSE:   // 新增：葫芦
-                hintFullHouse.setTextColor(Color.parseColor("#FFD700"));
-                break;
-            default:
-                break;
+            case SINGLE: hintSingle.setTextColor(Color.parseColor("#FFD700")); break;
+            case PAIR: hintPair.setTextColor(Color.parseColor("#FFD700")); break;
+            case TRIPLE: hintTriple.setTextColor(Color.parseColor("#FFD700")); break;
+            case STRAIGHT: hintStraight.setTextColor(Color.parseColor("#FFD700")); break;
+            case FLUSH: hintFlush.setTextColor(Color.parseColor("#FFD700")); break;
+            case IRON_BRANCH: hintIron.setTextColor(Color.parseColor("#FFD700")); break;
+            case STRAIGHT_FLUSH: hintStraightFlush.setTextColor(Color.parseColor("#FFD700")); break;
+            case FULL_HOUSE: hintFullHouse.setTextColor(Color.parseColor("#FFD700")); break;
+            default: break;
         }
     }
 
@@ -1088,7 +1014,6 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
         GameViewData data = gameActionHandler.getGameViewData();
         if (data == null) return;
 
-        // 移除旧视图
         cardTrackerLayout.removeAllViews();
 
         TableLayout table = new TableLayout(this);
@@ -1096,12 +1021,10 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
                 TableLayout.LayoutParams.WRAP_CONTENT,
                 TableLayout.LayoutParams.WRAP_CONTENT));
 
-        // 点数顺序（2 A K Q J 10 9 8 7 6 5 4 3）
         String[] rankOrder = {"2", "A", "K", "Q", "J", "10", "9", "8", "7", "6", "5", "4", "3"};
         Rank[] rankEnums = {Rank.TWO, Rank.ACE, Rank.KING, Rank.QUEEN, Rank.JACK, Rank.TEN,
                 Rank.NINE, Rank.EIGHT, Rank.SEVEN, Rank.SIX, Rank.FIVE, Rank.FOUR, Rank.THREE};
 
-        // 统计已打出的牌（从 GameViewData 获取累计列表）
         Map<Rank, Integer> played = new HashMap<>();
         for (Rank r : rankEnums) played.put(r, 0);
         List<Card> allPlayed = data.getAllPlayedCards();
@@ -1114,7 +1037,7 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
             }
         }
 
-        // 第一行：点数
+        // 点数行
         TableRow headerRow = new TableRow(this);
         for (int i = 0; i < rankOrder.length; i++) {
             TextView tv = new TextView(this);
@@ -1129,7 +1052,7 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
         }
         table.addView(headerRow);
 
-        // 第二行：剩余数量 = 4 - 已打出张数
+        // 剩余数量行
         TableRow dataRow = new TableRow(this);
         for (int i = 0; i < rankOrder.length; i++) {
             int remain = 4 - played.get(rankEnums[i]);
@@ -1164,7 +1087,6 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
 
     private void showGameOverDialog(GameViewData data) {
         if (gameOverDialogShown) return;
-
         gameOverDialogShown = true;
 
         List<PlayerViewData> players = data.getPlayers();
@@ -1177,7 +1099,6 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_game_over, null);
         builder.setView(dialogView);
         builder.setCancelable(false);
-
         AlertDialog dialog = builder.create();
 
         TextView tvTitle = dialogView.findViewById(R.id.tv_game_over_title);
@@ -1192,7 +1113,6 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
         RankingAdapter adapter = new RankingAdapter(sorted);
         rvRanking.setAdapter(adapter);
 
-        // ✅ 计算本机玩家的排名（放在 dialog.show() 之前）
         int myRank = -1;
         for (int i = 0; i < sorted.size(); i++) {
             if (sorted.get(i).getPlayerId().equals(localPlayerId)) {
@@ -1200,7 +1120,6 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
                 break;
             }
         }
-
         TextView tvMyRank = dialogView.findViewById(R.id.tv_my_rank);
         if (tvMyRank != null && myRank != -1) {
             tvMyRank.setText("您的排名：第 " + myRank + " 名");
@@ -1223,9 +1142,7 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
     }
 
     private void closeBluetoothSessionIfNeeded() {
-        if (!isBluetoothGame || bluetoothSessionClosed) {
-            return;
-        }
+        if (!isBluetoothGame || bluetoothSessionClosed) return;
         bluetoothSessionClosed = true;
         if (bluetoothActionHandler != null) {
             bluetoothActionHandler.disconnectBluetooth();
@@ -1233,12 +1150,10 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
     }
 
     private void showStyleAnalysisDialog() {
-        // 假数据：AI 同学后续会替换为真实的分析结果
         String analysisText = "您的风格：激进\n\n"
                 + "P2（Bob）：激进\n"
                 + "P3（Cindy）：保守\n"
                 + "P4（David）：均衡";
-
         new AlertDialog.Builder(this)
                 .setTitle("AI 风格分析")
                 .setMessage(analysisText)
@@ -1280,13 +1195,11 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
             CardPlayedEvent e = (CardPlayedEvent) event;
             Log.d("EventBus", "收到出牌事件: playerId=" + e.getPlayerId());
             runOnUiThread(this::fullRefresh);
-        }
-        else if (event instanceof PlayerPassedEvent) {
+        } else if (event instanceof PlayerPassedEvent) {
             PlayerPassedEvent e = (PlayerPassedEvent) event;
             Log.d("EventBus", "收到过牌事件: playerId=" + e.getPlayerId());
             runOnUiThread(this::fullRefresh);
-        }
-        else if (event instanceof TurnChangedEvent) {
+        } else if (event instanceof TurnChangedEvent) {
             TurnChangedEvent e = (TurnChangedEvent) event;
             String newPlayerId = e.getNewCurrentPlayerId();
             Log.d("EventBus", "收到回合切换事件: newPlayerId=" + newPlayerId);
@@ -1310,7 +1223,6 @@ public class GameActivity extends AppCompatActivity implements GameController.Co
                 if (!gameOverDialogShown) {
                     fullRefresh();
                 }
-                // 如果开启了智能助手，显示风格分析弹窗
                 if (enableAiAssistant) {
                     showStyleAnalysisDialog();
                 }
