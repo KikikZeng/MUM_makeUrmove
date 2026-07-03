@@ -3,7 +3,6 @@ package com.example.cardgame.ui;
 import com.example.cardgame.R;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Typeface;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
@@ -19,10 +18,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // 设置自定义字体
         TextView title = findViewById(R.id.tv_title);
-        Typeface typeface = Typeface.createFromAsset(getAssets(), "my_custom_font.ttf");
-        title.setTypeface(typeface);
 
         Button btnStart = findViewById(R.id.btn_start);
         Button btnSettings = findViewById(R.id.btn_settings);
@@ -30,7 +26,7 @@ public class MainActivity extends AppCompatActivity {
         Button btnExit = findViewById(R.id.btn_exit);
 
         btnStart.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, RoomSelectionActivity.class);
+            Intent intent = new Intent(MainActivity.this, NarrativeUploadActivity.class);
             startActivity(intent);
         });
 
