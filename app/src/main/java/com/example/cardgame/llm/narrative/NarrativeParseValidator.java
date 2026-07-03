@@ -30,7 +30,7 @@ public class NarrativeParseValidator {
         return parseResult;
     }
 
-    private boolean isValid(ParseResult parseResult) {
+    public boolean isValid(ParseResult parseResult) {
         if (parseResult == null
                 || parseResult.getFactions() == null || parseResult.getFactions().isEmpty()
                 || parseResult.getCards() == null || parseResult.getCards().isEmpty()
@@ -56,7 +56,7 @@ public class NarrativeParseValidator {
         return true;
     }
 
-    private void normalize(ParseResult parseResult) {
+    public void normalize(ParseResult parseResult) {
         Set<String> factionIds = collectFactionIds(parseResult.getFactions());
         for (NarrativeNode node : parseResult.getNodes()) {
             Map<String, List<String>> normalizedMap = new HashMap<>(node.getFactionCardIds());

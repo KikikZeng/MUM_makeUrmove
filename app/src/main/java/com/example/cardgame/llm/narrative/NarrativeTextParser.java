@@ -1,24 +1,29 @@
 package com.example.cardgame.llm.narrative;
 
+import android.util.Log;
+
 import com.example.cardgame.dto.narrative.ParseResult;
-import com.example.cardgame.llm.GlmLLMClient;
+import com.example.cardgame.llm.VivoLLMClient;
 import com.google.gson.Gson;
 
 import java.io.IOException;
 
 public class NarrativeTextParser {
-    private final GlmLLMClient llmClient;
+    private static final String TAG = "NarrativeTextParser";
+    private static final double RETRY_TEMPERATURE = 0.3;
+
+    private final VivoLLMClient llmClient;
     private final NarrativePromptBuilder promptBuilder;
     private final NarrativeParseValidator parseValidator;
     private final FallbackNarrativeDataProvider fallbackDataProvider;
     private final Gson gson;
 
     public NarrativeTextParser() {
-        this(new GlmLLMClient(), new NarrativePromptBuilder(),
+        this(new VivoLLMClient(), new NarrativePromptBuilder(),
                 new NarrativeParseValidator(), new FallbackNarrativeDataProvider());
     }
 
-    public NarrativeTextParser(GlmLLMClient llmClient, NarrativePromptBuilder promptBuilder,
+    public NarrativeTextParser(VivoLLMClient llmClient, NarrativePromptBuilder promptBuilder,
                                NarrativeParseValidator parseValidator,
                                FallbackNarrativeDataProvider fallbackDataProvider) {
         this.llmClient = llmClient;
@@ -29,13 +34,78 @@ public class NarrativeTextParser {
     }
 
     public ParseResult parse(String rawText) {
+        Log.i(TAG, "=== 开始解析文本 ===");
+        Log.i(TAG, "Raw text length: " + (rawText != null ? rawText.length() : 0));
+        String textPreview = rawText != null && rawText.length() > 300 ? rawText.substring(0, 300) + "..." : rawText;
+        Log.i(TAG, "Raw text preview: " + textPreview);
+
         try {
-            String content = llmClient.chat(promptBuilder.buildMessages(sanitizeText(rawText)));
-            ParseResult parseResult = gson.fromJson(extractJsonObject(content), ParseResult.class);
-            return parseValidator.validateOrFallback(parseResult);
+            String sanitized = sanitizeText(rawText);
+            Log.d(TAG, "Sanitized text length: " + sanitized.length());
+
+            ParseResult result = tryParseWithRetry(sanitized);
+            if (result.isFallbackUsed()) {
+                Log.e(TAG, "=== 解析失败，使用 Fallback 数据 ===");
+                Log.e(TAG, "Fallback data: 安史之乱预设数据");
+            } else {
+                Log.i(TAG, "=== 解析成功 ===");
+                Log.i(TAG, "Factions count: " + (result.getFactions() != null ? result.getFactions().size() : 0));
+                Log.i(TAG, "Cards count: " + (result.getCards() != null ? result.getCards().size() : 0));
+                Log.i(TAG, "Nodes count: " + (result.getNodes() != null ? result.getNodes().size() : 0));
+            }
+            return result;
         } catch (Exception e) {
+            Log.e(TAG, "=== 解析失败，使用 Fallback 数据 ===");
+            Log.e(TAG, "Exception: " + e.getMessage(), e);
+            Log.e(TAG, "Fallback data: 安史之乱预设数据");
             return fallbackDataProvider.getFallbackData();
         }
+    }
+
+    private ParseResult tryParseWithRetry(String sanitizedText) throws IOException {
+        Log.d(TAG, "First attempt with temperature 0.2");
+
+        String content = llmClient.chat(promptBuilder.buildMessages(sanitizedText));
+        Log.d(TAG, "Raw LLM response length: " + (content != null ? content.length() : 0));
+
+        ParseResult parseResult;
+        try {
+            String jsonObject = extractJsonObject(content);
+            jsonObject = cleanJsonPunctuation(jsonObject);
+            Log.d(TAG, "Extracted JSON length: " + jsonObject.length());
+            parseResult = gson.fromJson(jsonObject, ParseResult.class);
+        } catch (Exception e) {
+            Log.e(TAG, "First attempt failed: " + e.getMessage(), e);
+            throw e;
+        }
+
+        if (parseValidator.isValid(parseResult)) {
+            Log.d(TAG, "First parse attempt valid, normalizing data");
+            parseValidator.normalize(parseResult);
+            return parseResult;
+        }
+
+        Log.w(TAG, "First parse attempt invalid, retrying with temperature " + RETRY_TEMPERATURE + "...");
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+        }
+
+        Log.d(TAG, "Second attempt with temperature " + RETRY_TEMPERATURE);
+        content = llmClient.chat(promptBuilder.buildMessages(sanitizedText), RETRY_TEMPERATURE);
+        Log.d(TAG, "Raw LLM response (retry) length: " + (content != null ? content.length() : 0));
+
+        try {
+            String jsonObject = extractJsonObject(content);
+            jsonObject = cleanJsonPunctuation(jsonObject);
+            parseResult = gson.fromJson(jsonObject, ParseResult.class);
+        } catch (Exception e) {
+            Log.e(TAG, "Second attempt failed: " + e.getMessage(), e);
+            return fallbackDataProvider.getFallbackData();
+        }
+
+        return parseValidator.validateOrFallback(parseResult);
     }
 
     private String sanitizeText(String rawText) throws IOException {
@@ -64,5 +134,52 @@ public class NarrativeTextParser {
             throw new IOException("No JSON object found");
         }
         return trimmed.substring(start, end + 1);
+    }
+
+    /**
+     * 清洗 JSON 中字符串外的中文标点（避免破坏字符串值内的正常中文内容）。
+     * 只替换引号外的：中文逗号，→ , ；中文冒号 ：→ : 。
+     */
+    private String cleanJsonPunctuation(String json) {
+        if (json == null || json.isEmpty()) {
+            return json;
+        }
+        StringBuilder sb = new StringBuilder(json.length());
+        boolean inString = false;
+        boolean escaped = false;
+        for (int i = 0; i < json.length(); i++) {
+            char c = json.charAt(i);
+            if (escaped) {
+                sb.append(c);
+                escaped = false;
+                continue;
+            }
+            if (c == '\\') {
+                sb.append(c);
+                escaped = true;
+                continue;
+            }
+            if (c == '"') {
+                inString = !inString;
+                sb.append(c);
+                continue;
+            }
+            if (!inString) {
+                if (c == '，') {
+                    sb.append(',');
+                    continue;
+                }
+                if (c == '：') {
+                    sb.append(':');
+                    continue;
+                }
+            }
+            sb.append(c);
+        }
+        String cleaned = sb.toString();
+        if (!cleaned.equals(json)) {
+            Log.d(TAG, "JSON punctuation cleaned (full-width -> half-width outside strings)");
+        }
+        return cleaned;
     }
 }
