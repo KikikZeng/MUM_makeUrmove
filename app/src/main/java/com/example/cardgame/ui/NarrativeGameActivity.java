@@ -6,7 +6,6 @@ import android.view.Gravity;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.Button;
@@ -27,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 
 public class NarrativeGameActivity extends AppCompatActivity {
-    private TextView progressText;
     private TextView stageTitleText;
     private TextView stageHintText;
     private TextView narrationText;
@@ -39,7 +37,6 @@ public class NarrativeGameActivity extends AppCompatActivity {
     private LinearLayout handContainer;
     private FrameLayout factionSeatContainer;
     private Button submitButton;
-    private ProgressBar progressBar;
     private boolean settlementOpened;
     private final List<String> selectedCardIds = new ArrayList<>();
 
@@ -48,7 +45,6 @@ public class NarrativeGameActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_narrative_game);
 
-        progressText = findViewById(R.id.tv_narrative_progress);
         stageTitleText = findViewById(R.id.tv_stage_title);
         stageHintText = findViewById(R.id.tv_stage_hint);
         narrationText = findViewById(R.id.tv_narration);
@@ -60,7 +56,6 @@ public class NarrativeGameActivity extends AppCompatActivity {
         handContainer = findViewById(R.id.layout_hand_cards);
         factionSeatContainer = findViewById(R.id.layout_faction_seats);
         submitButton = findViewById(R.id.btn_submit_event_cards);
-        progressBar = findViewById(R.id.progress_history);
         Button btnAbandon = findViewById(R.id.btn_abandon_narrative);
 
         submitButton.setOnClickListener(v -> submitCards());
@@ -77,10 +72,6 @@ public class NarrativeGameActivity extends AppCompatActivity {
             return;
         }
 
-        int displayProgress = Math.min(viewData.getGlobalProgress() + 1, viewData.getTotalNodes());
-        progressText.setText("历史进度 " + displayProgress + "/" + viewData.getTotalNodes());
-        progressBar.setMax(viewData.getTotalNodes());
-        progressBar.setProgress(viewData.getGlobalProgress());
         renderProgressNodes(viewData);
         renderFactionSeats(viewData);
         renderHearts(viewData.getHearts());
@@ -110,16 +101,16 @@ public class NarrativeGameActivity extends AppCompatActivity {
             TextView node = new TextView(this);
             node.setText(String.valueOf(i + 1));
             node.setGravity(Gravity.CENTER);
-            node.setTextSize(12);
+            node.setTextSize(10);
             node.setTextColor(0xFFFFFFFF);
             node.setTypeface(null, android.graphics.Typeface.BOLD);
-            node.setBackgroundColor(i <= viewData.getGlobalProgress() ? 0xFF9E2F1D : 0x66333333);
+            node.setBackgroundColor(i <= viewData.getGlobalProgress() ? 0xFF3D523D : 0x663D523D);
             node.setOnClickListener(v -> {
                 String title = index < titles.size() ? titles.get(index) : "历史节点 " + (index + 1);
                 Toast.makeText(this, title, Toast.LENGTH_SHORT).show();
             });
 
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, dp(26), 1);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, dp(18), 1);
             params.setMargins(3, 0, 3, 0);
             node.setLayoutParams(params);
             progressNodeContainer.addView(node);
@@ -154,15 +145,15 @@ public class NarrativeGameActivity extends AppCompatActivity {
         seat.setText(text);
         seat.setGravity(Gravity.CENTER);
         seat.setTextColor(0xFFFFFFFF);
-        seat.setTextSize(13);
+        seat.setTextSize(11);
         seat.setTypeface(null, android.graphics.Typeface.BOLD);
         seat.setBackgroundColor(user ? 0xCC9E2F1D : 0x884E342E);
-        seat.setPadding(8, 4, 8, 4);
+        seat.setPadding(6, 2, 6, 2);
         return seat;
     }
 
     private FrameLayout.LayoutParams createSeatParams(int gravity) {
-        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(dp(112), dp(36));
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(dp(90), dp(28));
         params.gravity = gravity;
         return params;
     }
@@ -173,11 +164,11 @@ public class NarrativeGameActivity extends AppCompatActivity {
             TextView heart = new TextView(this);
             heart.setText("♥");
             heart.setTextColor(0xFFE53935);
-            heart.setTextSize(24);
+            heart.setTextSize(16);
             heart.setGravity(Gravity.CENTER);
             heart.setAlpha(heartAlpha(hearts, i));
 
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(dp(26), dp(28));
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(dp(20), dp(22));
             params.setMargins(0, 0, 4, 0);
             heart.setLayoutParams(params);
             heartContainer.addView(heart);

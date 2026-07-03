@@ -26,7 +26,6 @@ public class NarrativeSettlementActivity extends AppCompatActivity {
         TextView titleText = findViewById(R.id.tv_settlement_title);
         TextView historyResultText = findViewById(R.id.tv_history_result);
         TextView historySentenceText = findViewById(R.id.tv_history_sentence);
-        TextView ratingText = findViewById(R.id.tv_settlement_rating);
         TextView statsText = findViewById(R.id.tv_settlement_stats);
         Button btnHome = findViewById(R.id.btn_settlement_home);
         Button btnReplay = findViewById(R.id.btn_settlement_replay);
@@ -36,13 +35,11 @@ public class NarrativeSettlementActivity extends AppCompatActivity {
             titleText.setText("推演结束");
             historyResultText.setText("历史结果：暂无");
             historySentenceText.setText("未获取到本局历史推演数据。");
-            ratingText.setText("未完成");
             statsText.setText("暂无对局数据");
         } else {
             titleText.setText(viewData.getStatus() == GameStatus.ABANDONED ? "中途放弃" : "推演完成");
             historyResultText.setText(buildHistoryResult(viewData));
             historySentenceText.setText(buildHistorySentence(viewData));
-            ratingText.setText(buildRating(viewData));
             statsText.setText(buildStats(viewData));
         }
 
@@ -58,19 +55,6 @@ public class NarrativeSettlementActivity extends AppCompatActivity {
             startActivity(intent);
             finish();
         });
-    }
-
-    private String buildRating(NarrativeGameViewData viewData) {
-        if (viewData.getStatus() == GameStatus.ABANDONED) {
-            return "未完成";
-        }
-        if (viewData.getHearts() <= 0.0 || viewData.getSevereErrorCount() > 0) {
-            return "失败";
-        }
-        if (viewData.getWrongCount() == 0 && viewData.getIncompleteCount() == 0) {
-            return "优秀";
-        }
-        return "合格";
     }
 
     private String buildHistoryResult(NarrativeGameViewData viewData) {
@@ -120,8 +104,7 @@ public class NarrativeSettlementActivity extends AppCompatActivity {
                 + "\n完全正确：" + viewData.getCorrectCount()
                 + "  选错：" + viewData.getWrongCount()
                 + "  没选全：" + viewData.getIncompleteCount()
-                + "  严重错误：" + viewData.getSevereErrorCount()
-                + "\n用时：暂未统计";
+                + "  严重错误：" + viewData.getSevereErrorCount();
     }
 
     private String formatHearts(double hearts) {

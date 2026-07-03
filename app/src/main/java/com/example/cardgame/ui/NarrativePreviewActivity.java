@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.HorizontalScrollView;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -63,7 +64,7 @@ public class NarrativePreviewActivity extends AppCompatActivity {
         Button btnReparse = findViewById(R.id.btn_reparse);
         startButton = findViewById(R.id.btn_start_narrative_game);
         reparseButton = btnReparse;
-        Button btnBack = findViewById(R.id.btn_preview_back);
+        ImageButton btnBack = findViewById(R.id.btn_preview_back);
 
         btnToggleSource.setOnClickListener(v -> toggleSourceText());
         btnToggleHand.setOnClickListener(v -> toggleHandPreview());

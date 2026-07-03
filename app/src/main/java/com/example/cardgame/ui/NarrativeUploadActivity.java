@@ -6,6 +6,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -28,14 +29,13 @@ public class NarrativeUploadActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_narrative_upload);
 
-        inputText = findViewById(R.id.et_narrative_text);
-        Button btnUseSample = findViewById(R.id.btn_use_sample);
-        Button btnUploadFile = findViewById(R.id.btn_upload_file);
-        Button btnUploadImage = findViewById(R.id.btn_upload_image);
-        parseButton = findViewById(R.id.btn_parse_text);
-        previewButton = findViewById(R.id.btn_open_preview);
-        counterText = findViewById(R.id.tv_text_counter);
-        Button btnBack = findViewById(R.id.btn_narrative_upload_back);
+        inputText = findViewById(R.id.rv_camp_list);
+        Button btnSample = findViewById(R.id.btn_hand_preview);
+        parseButton = findViewById(R.id.btn_timeline_preview);
+        previewButton = findViewById(R.id.btn_reparse);
+        counterText = findViewById(R.id.tv_game_duration);
+        ImageButton btnBack = findViewById(R.id.btn_back);
+        Button btnClear = findViewById(R.id.btn_enter_game);
 
         inputText.setText(SAMPLE_TEXT);
         updateCounter();
@@ -57,9 +57,8 @@ public class NarrativeUploadActivity extends AppCompatActivity {
             }
         });
 
-        btnUseSample.setOnClickListener(v -> inputText.setText(SAMPLE_TEXT));
-        btnUploadFile.setOnClickListener(v -> Toast.makeText(this, "文件上传暂未开放", Toast.LENGTH_SHORT).show());
-        btnUploadImage.setOnClickListener(v -> Toast.makeText(this, "图片识别暂未开放", Toast.LENGTH_SHORT).show());
+        btnSample.setOnClickListener(v -> inputText.setText(SAMPLE_TEXT));
+        btnClear.setOnClickListener(v -> inputText.setText(""));
         btnBack.setOnClickListener(v -> finish());
         parseButton.setOnClickListener(v -> parseAndPreview());
         previewButton.setOnClickListener(v -> openPreview());
@@ -99,8 +98,9 @@ public class NarrativeUploadActivity extends AppCompatActivity {
 
     private void updateCounter() {
         int length = inputText.getText().toString().length();
-        counterText.setText("最多 5000 字 · 剩余 " + Math.max(0, MAX_TEXT_LENGTH - length) + " 字");
-        counterText.setTextColor(length > MAX_TEXT_LENGTH ? 0xFFFFD48A : 0xFFE8FFFF);
+        int remaining = Math.max(0, MAX_TEXT_LENGTH - length);
+        counterText.setText("最多 5000 字 · 剩余 " + remaining + " 字");
+        counterText.setTextColor(length > MAX_TEXT_LENGTH ? 0xFFE8D5A3 : 0xFF8B7355);
     }
 
     private void updatePreviewButton(boolean enabled) {
