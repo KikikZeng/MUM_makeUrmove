@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_menu"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="MUM 历史推演"
+            android:textColor="#FFFFFF"
+            android:textSize="34sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="输入一段历史、新闻或文学材料，系统将解析阵营、事件牌和全局历史节点。"
+            android:textColor="#E8FFFFFF"
+            android:textSize="15sp"
+            android:lineSpacingExtra="4dp"
+            android:layout_marginBottom="18dp" />
+
+        <EditText
+            android:id="@+id/et_narrative_text"
+            android:layout_width="match_parent"
+            android:layout_height="220dp"
+            android:background="#EEFFFFFF"
+            android:gravity="top|start"
+            android:hint="粘贴文本"
+            android:inputType="textMultiLine"
+            android:padding="14dp"
+            android:textColor="#2B1A12"
+            android:textColorHint="#8A6D5C"
+            android:textSize="15sp" />
+
+        <TextView
+            android:id="@+id/tv_text_counter"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="end"
+            android:textColor="#E8FFFFFF"
+            android:textSize="13sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="16dp">
+
+            <Button
+                android:id="@+id/btn_use_sample"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:background="@drawable/btn_gradient_bg"
+                android:text="示例文本"
+                android:textColor="#FFFFFF"
+                android:textSize="15sp" />
+
+            <Space
+                android:layout_width="12dp"
+                android:layout_height="1dp" />
+
+            <Button
+                android:id="@+id/btn_upload_file"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:background="@drawable/btn_gradient_bg"
+                android:text="上传文件"
+                android:textColor="#FFFFFF"
+                android:textSize="15sp" />
+
+            <Space
+                android:layout_width="12dp"
+                android:layout_height="1dp" />
+
+            <Button
+                android:id="@+id/btn_upload_image"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:background="@drawable/btn_gradient_bg"
+                android:text="上传图片"
+                android:textColor="#FFFFFF"
+                android:textSize="15sp" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btn_parse_text"
+            android:layout_width="match_parent"
+            android:layout_height="58dp"
+            android:layout_marginTop="22dp"
+            android:background="@drawable/btn_gradient_bg"
+            android:text="开始解析"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/btn_open_preview"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/btn_gradient_bg"
+            android:text="结果预览"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/btn_narrative_upload_back"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginTop="12dp"
+            android:backgroundTint="#55000000"
+            android:text="返回"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp" />
+    </LinearLayout>
+</ScrollView>

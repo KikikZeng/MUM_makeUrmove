@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_menu"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="选择阵营"
+            android:textColor="#FFFFFF"
+            android:textSize="32sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tv_preview_summary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textColor="#E8FFFFFF"
+            android:textSize="15sp" />
+
+        <TextView
+            android:id="@+id/tv_preview_time"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textColor="#CCFFFFFF"
+            android:textSize="13sp" />
+
+        <Button
+            android:id="@+id/btn_toggle_source_text"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:layout_marginTop="14dp"
+            android:backgroundTint="#55000000"
+            android:text="查看文本"
+            android:textColor="#FFFFFF"
+            android:textSize="15sp" />
+
+        <EditText
+            android:id="@+id/et_preview_source_text"
+            android:layout_width="match_parent"
+            android:layout_height="170dp"
+            android:layout_marginTop="8dp"
+            android:background="#EEFFFFFF"
+            android:gravity="top|start"
+            android:inputType="textMultiLine"
+            android:padding="12dp"
+            android:textColor="#2B1A12"
+            android:textSize="14sp"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/btn_reparse"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/btn_gradient_bg"
+            android:text="重新解析"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp" />
+
+        <LinearLayout
+            android:id="@+id/layout_faction_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:orientation="vertical" />
+
+        <Button
+            android:id="@+id/btn_toggle_hand_preview"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:layout_marginTop="4dp"
+            android:backgroundTint="#55000000"
+            android:text="查看当前阵营手牌"
+            android:textColor="#FFFFFF"
+            android:textSize="15sp" />
+
+        <HorizontalScrollView
+            android:id="@+id/scroll_hand_preview"
+            android:layout_width="match_parent"
+            android:layout_height="124dp"
+            android:layout_marginTop="8dp"
+            android:scrollbars="horizontal"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:id="@+id/layout_hand_preview"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="horizontal" />
+        </HorizontalScrollView>
+
+        <Button
+            android:id="@+id/btn_toggle_timeline"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:layout_marginTop="10dp"
+            android:backgroundTint="#55000000"
+            android:text="查看全局历史线"
+            android:textColor="#FFFFFF"
+            android:textSize="15sp" />
+
+        <LinearLayout
+            android:id="@+id/layout_timeline"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="vertical"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/btn_start_narrative_game"
+            android:layout_width="match_parent"
+            android:layout_height="58dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/btn_gradient_bg"
+            android:text="进入对局"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_weight="1"
+                android:backgroundTint="#33000000"
+                android:text="喜欢"
+                android:textColor="#FFFFFF" />
+
+            <Space
+                android:layout_width="8dp"
+                android:layout_height="1dp" />
+
+            <Button
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_weight="1"
+                android:backgroundTint="#33000000"
+                android:text="不喜欢"
+                android:textColor="#FFFFFF" />
+
+            <Space
+                android:layout_width="8dp"
+                android:layout_height="1dp" />
+
+            <Button
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_weight="1"
+                android:backgroundTint="#33000000"
+                android:text="报告错误"
+                android:textColor="#FFFFFF" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btn_preview_back"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="8dp"
+            android:backgroundTint="#55000000"
+            android:text="返回修改"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp" />
+    </LinearLayout>
+</ScrollView>

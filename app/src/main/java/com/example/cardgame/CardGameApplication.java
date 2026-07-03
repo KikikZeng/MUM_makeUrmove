@@ -9,6 +9,8 @@ import com.example.cardgame.controller.BluetoothActionHandler;
 import com.example.cardgame.controller.BluetoothController;
 import com.example.cardgame.controller.GameActionHandler;
 import com.example.cardgame.controller.GameController;
+import com.example.cardgame.controller.narrative.NarrativeActionHandler;
+import com.example.cardgame.controller.narrative.NarrativeGameController;
 import com.example.cardgame.engine.GameEngine;
 
 public class CardGameApplication extends Application {
@@ -17,6 +19,7 @@ public class CardGameApplication extends Application {
     
     private static GameEngine gameEngine;
     private static GameActionHandler gameActionHandler;
+    private static NarrativeActionHandler narrativeActionHandler;
     private static BluetoothActionHandler bluetoothActionHandler;
 
     @Override
@@ -25,6 +28,7 @@ public class CardGameApplication extends Application {
 
         gameEngine = new GameEngine();
         gameActionHandler = new GameController(gameEngine);
+        narrativeActionHandler = new NarrativeGameController();
 
         Log.d(TAG, "onCreate() - Application initialized, GameActionHandler ready.");
         System.out.println("[CardGame][APP] Application initialized, GameActionHandler ready.");
@@ -54,6 +58,10 @@ public class CardGameApplication extends Application {
 
     public static GameEngine getGameEngine() {
         return gameEngine;
+    }
+
+    public static NarrativeActionHandler getNarrativeActionHandler() {
+        return narrativeActionHandler;
     }
 
     public static synchronized BluetoothActionHandler getBluetoothActionHandler(Context context) {

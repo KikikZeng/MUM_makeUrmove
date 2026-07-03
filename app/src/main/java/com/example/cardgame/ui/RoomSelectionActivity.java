@@ -6,6 +6,7 @@ import android.graphics.Typeface;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -28,19 +29,16 @@ public class RoomSelectionActivity extends AppCompatActivity {
         btnJoinRoom.setTypeface(typeface);
 
         btnPractice.setOnClickListener(v -> {
-            Intent intent = new Intent(RoomSelectionActivity.this, RoomSettingsActivity.class);
-            intent.putExtra("is_practice", true);
+            Intent intent = new Intent(RoomSelectionActivity.this, NarrativeUploadActivity.class);
             startActivity(intent);
         });
 
         btnCreateRoom.setOnClickListener(v -> {
-            Intent intent = new Intent(RoomSelectionActivity.this, RoomSettingsActivity.class);
-            startActivity(intent);
+            Toast.makeText(this, "多人模式暂未开放", Toast.LENGTH_SHORT).show();
         });
 
         btnJoinRoom.setOnClickListener(v -> {
-            Intent intent = new Intent(RoomSelectionActivity.this, SearchDeviceActivity.class);
-            startActivity(intent);
+            Toast.makeText(this, "多人模式暂未开放", Toast.LENGTH_SHORT).show();
         });
 
         // 返回主菜单
