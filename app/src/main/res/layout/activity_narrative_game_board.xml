@@ -1,0 +1,407 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/p2"
+    android:paddingLeft="12dp"
+    android:paddingRight="12dp"
+    android:paddingBottom="8dp">
+
+    <!-- 节点指示器（顶部） -->
+    <LinearLayout
+        android:id="@+id/layout_progress_nodes"
+        android:layout_width="match_parent"
+        android:layout_height="22dp"
+        android:layout_marginTop="2dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- 左上角返回按钮 -->
+    <ImageButton
+        android:id="@+id/btn_game_back"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_marginTop="2dp"
+        android:layout_marginStart="4dp"
+        android:background="@android:color/transparent"
+        android:contentDescription="返回"
+        android:scaleType="centerInside"
+        android:src="@android:drawable/ic_menu_revert"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/layout_progress_nodes"
+        app:tint="#E8D5A3" />
+
+    <!-- 节点行动（阶段标题右侧，爱心左侧） -->
+    <TextView
+        android:id="@+id/tv_node_actions"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="0dp"
+        android:layout_marginEnd="2dp"
+        android:maxWidth="120dp"
+        android:background="#66FFFDE8"
+        android:gravity="center"
+        android:lineSpacingExtra="1dp"
+        android:padding="4dp"
+        android:textColor="#F6F2E8"
+        android:textSize="10sp"
+        app:layout_constraintEnd_toStartOf="@id/layout_heart_container"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toEndOf="@id/tv_stage_title"
+        app:layout_constraintTop_toTopOf="@id/layout_heart_container"
+        app:layout_constraintTop_toBottomOf="@id/layout_progress_nodes" />
+
+    <!-- 右上角生命值 -->
+    <LinearLayout
+        android:id="@+id/layout_heart_container"
+        android:layout_width="wrap_content"
+        android:layout_height="36dp"
+        android:layout_marginTop="2dp"
+        android:layout_marginEnd="4dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/layout_progress_nodes">
+
+        <TextView
+            android:id="@+id/tv_heart_1"
+            android:layout_width="20dp"
+            android:layout_height="22dp"
+            android:gravity="center"
+            android:text="♥"
+            android:textColor="#E53935"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/tv_heart_2"
+            android:layout_width="20dp"
+            android:layout_height="22dp"
+            android:gravity="center"
+            android:text="♥"
+            android:textColor="#E53935"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/tv_heart_3"
+            android:layout_width="20dp"
+            android:layout_height="22dp"
+            android:gravity="center"
+            android:text="♥"
+            android:textColor="#E53935"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+    <!-- 叙事文本（返回键和上方阵营之间） -->
+    <TextView
+        android:id="@+id/tv_narration"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="4dp"
+        android:background="@drawable/bg_narration_rounded"
+        android:gravity="center"
+        android:lineSpacingExtra="1dp"
+        android:padding="5dp"
+        android:textColor="#4A3C2A"
+        android:textSize="11sp"
+        app:layout_constraintBottom_toBottomOf="@id/layout_heart_container"
+        app:layout_constraintEnd_toStartOf="@id/tv_stage_title"
+        app:layout_constraintStart_toEndOf="@id/btn_game_back"
+        app:layout_constraintTop_toTopOf="@id/btn_game_back" />
+
+    <!-- 阶段标题（顶部居中） -->
+    <TextView
+        android:id="@+id/tv_stage_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:textColor="#E8D5A3"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/layout_progress_nodes" />
+
+    <!-- 上方对手 -->
+    <LinearLayout
+        android:id="@+id/opponent_top"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="0dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_stage_title">
+
+        <TextView
+            android:id="@+id/tv_name_top"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#E8D5A3"
+            android:textSize="12sp" />
+
+        <FrameLayout
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:minHeight="0dp"
+            android:layout_marginTop="0dp">
+            <LinearLayout
+                android:id="@+id/play_area_top"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="horizontal" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <!-- ========== 阶段提示（上方阵营正下方，居中） ========== -->
+
+    <TextView
+        android:id="@+id/tv_stage_hint"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="0dp"
+        android:gravity="center"
+        android:textColor="#F6F2E8"
+        android:textSize="12sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/opponent_top" />
+
+    <TextView
+        android:id="@+id/tv_ai_progress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="0dp"
+        android:gravity="center"
+        android:textColor="#8B7355"
+        android:textSize="11sp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_stage_hint" />
+
+    <!-- ========== 中间双框出牌展示区 ========== -->
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.5" />
+
+    <!-- 左框：上一轮出牌（其他人） -->
+
+    <!-- 右框：我方本轮出牌 -->
+    <LinearLayout
+        android:id="@+id/layout_play_zone_left"
+        android:layout_width="260dp"
+        android:layout_height="89dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="6dp"
+        android:background="@drawable/bg_play_zone"
+        android:gravity="start|top"
+        android:minHeight="60dp"
+        android:orientation="vertical"
+        android:padding="5dp"
+        app:layout_constraintEnd_toStartOf="@id/guideline_center"
+        app:layout_constraintHorizontal_bias="0.666"
+        app:layout_constraintStart_toEndOf="@id/opponent_left"
+        app:layout_constraintTop_toBottomOf="@id/tv_ai_progress">
+
+        <TextView
+            android:id="@+id/tv_last_round_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="start"
+            android:text="上一轮出牌："
+            android:textColor="#F6F2E8"
+            android:textSize="10sp" />
+
+        <LinearLayout
+            android:id="@+id/layout_last_round_cards"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal" />
+    </LinearLayout>
+
+    <!-- 左侧对手 -->
+    <LinearLayout
+        android:id="@+id/layout_play_zone_right"
+        android:layout_width="255dp"
+        android:layout_height="89dp"
+        android:layout_marginStart="6dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="4dp"
+        android:background="@drawable/bg_play_zone"
+        android:gravity="start|top"
+        android:minHeight="60dp"
+        android:orientation="vertical"
+        android:padding="5dp"
+        app:layout_constraintEnd_toStartOf="@id/opponent_right"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toEndOf="@id/guideline_center"
+        app:layout_constraintTop_toBottomOf="@id/tv_ai_progress">
+
+        <TextView
+            android:id="@+id/tv_play_instruction"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="start"
+            android:text="请根据阶段提示选择手牌："
+            android:textColor="#F6F2E8"
+            android:textSize="10sp" />
+
+        <LinearLayout
+            android:id="@+id/layout_player_played_cards"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:minHeight="36dp"
+            android:orientation="horizontal" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/opponent_left"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/opponent_top"
+        app:layout_constraintBottom_toTopOf="@id/btn_submit_event_cards"
+        app:layout_constraintVertical_bias="0.25">
+
+        <TextView
+            android:id="@+id/tv_name_left"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#E8D5A3"
+            android:textSize="12sp" />
+
+        <FrameLayout
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:minHeight="0dp"
+            android:layout_marginStart="2dp">
+            <LinearLayout
+                android:id="@+id/play_area_left"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="horizontal" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <!-- 右侧对手 -->
+    <LinearLayout
+        android:id="@+id/opponent_right"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="4dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/opponent_top"
+        app:layout_constraintBottom_toTopOf="@id/btn_abandon_narrative"
+        app:layout_constraintVertical_bias="0.25">
+
+        <FrameLayout
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:minHeight="0dp"
+            android:layout_marginEnd="2dp">
+            <LinearLayout
+                android:id="@+id/play_area_right"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="horizontal" />
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/tv_name_right"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#E8D5A3"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <!-- ========== 底部 ========== -->
+
+    <TextView
+        android:id="@+id/tv_user_faction"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="2dp"
+        android:textColor="#E8D5A3"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@id/layout_hand_cards"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/btn_submit_event_cards"
+        android:layout_width="80dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginBottom="2dp"
+        android:background="@drawable/bg_button_red"
+        android:text="出牌"
+        android:textColor="#F6F2E8"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/btn_abandon_narrative"
+        android:layout_width="80dp"
+        android:layout_height="40dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginBottom="2dp"
+        android:background="@drawable/bg_button_rounded"
+        android:text="放弃"
+        android:textColor="#E8D5A3"
+        android:textSize="14sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <HorizontalScrollView
+        android:id="@+id/layout_hand_cards"
+        android:layout_width="0dp"
+        android:layout_height="100dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="2dp"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:scrollbars="none"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/btn_abandon_narrative"
+        app:layout_constraintStart_toEndOf="@id/btn_submit_event_cards">
+
+        <FrameLayout
+            android:id="@+id/layout_hand_cards_wrapper"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:id="@+id/layout_hand_cards_inner"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:gravity="center_vertical"
+                android:orientation="horizontal" />
+        </FrameLayout>
+    </HorizontalScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

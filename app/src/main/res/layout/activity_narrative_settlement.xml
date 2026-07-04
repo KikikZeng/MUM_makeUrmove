@@ -5,14 +5,14 @@
     android:background="@drawable/p3"
     android:gravity="center"
     android:orientation="vertical"
-    android:padding="28dp">
+    android:padding="20dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="#DD1C261F"
         android:orientation="horizontal"
-        android:padding="24dp">
+        android:padding="18dp">
 
         <LinearLayout
             android:layout_width="0dp"
@@ -20,7 +20,7 @@
             android:layout_weight="1"
             android:gravity="center"
             android:orientation="vertical"
-            android:paddingEnd="16dp">
+            android:paddingEnd="12dp">
 
             <TextView
                 android:id="@+id/tv_settlement_title"
@@ -28,50 +28,48 @@
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:textColor="#E8D5A3"
-                android:textSize="26sp"
+                android:textSize="20sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tv_history_result"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="8dp"
                 android:gravity="center"
                 android:textColor="#8B7355"
-                android:textSize="14sp" />
+                android:textSize="12sp" />
 
             <TextView
                 android:id="@+id/tv_history_sentence"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
+                android:layout_marginTop="4dp"
                 android:gravity="center"
-                android:lineSpacingExtra="3dp"
+                android:lineSpacingExtra="2dp"
                 android:textColor="#F6F2E8"
-                android:textSize="14sp" />
+                android:textSize="12sp" />
 
             <Button
                 android:id="@+id/btn_settlement_replay"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="20dp"
-                android:background="@drawable/bg_button_rounded"
-                android:backgroundTint="#7A2E2E"
+                android:layout_height="42dp"
+                android:layout_marginTop="14dp"
+                android:background="@drawable/bg_button_red"
                 android:text="重新推演"
                 android:textColor="#F6F2E8"
-                android:textSize="16sp"
+                android:textSize="14sp"
                 android:textStyle="bold" />
 
             <Button
                 android:id="@+id/btn_settlement_home"
                 android:layout_width="match_parent"
-                android:layout_height="44dp"
-                android:layout_marginTop="8dp"
+                android:layout_height="40dp"
+                android:layout_marginTop="6dp"
                 android:background="@drawable/bg_button_rounded"
-                android:backgroundTint="#2E4A5A"
                 android:text="返回首页"
                 android:textColor="#E8D5A3"
-                android:textSize="14sp" />
+                android:textSize="12sp" />
         </LinearLayout>
 
         <LinearLayout
@@ -80,16 +78,16 @@
             android:layout_weight="1"
             android:gravity="center"
             android:orientation="vertical"
-            android:paddingStart="16dp">
+            android:paddingStart="12dp">
 
             <TextView
                 android:id="@+id/tv_settlement_stats"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:lineSpacingExtra="5dp"
+                android:lineSpacingExtra="4dp"
                 android:textColor="#F6F2E8"
-                android:textSize="15sp" />
+                android:textSize="12sp" />
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>
