@@ -93,8 +93,8 @@ public class VivoLLMClient {
         Request request = new Request.Builder()
                 .url(url)
                 .header("Authorization", "Bearer " + API_KEY)
-                .header("Content-Type", "application/json")
-                .post(RequestBody.create(body.toString(), MediaType.parse("application/json")))
+                .header("Content-Type", "application/json; charset=utf-8")
+                .post(RequestBody.create(body.toString(), MediaType.parse("application/json; charset=utf-8")))
                 .build();
 
         Log.d(TAG, "Sending request to vivo LLM, requestId: " + requestId);
