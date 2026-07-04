@@ -2,6 +2,7 @@ package com.example.cardgame.ui;
 
 import android.content.Intent;
 import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -306,7 +307,11 @@ public class NarrativePreviewActivity extends AppCompatActivity {
         cardView.setIncludeFontPadding(false);
         cardView.setLineSpacing(0, 1.08f);
         cardView.setPadding(8, 8, 8, 8);
-        cardView.setBackgroundColor(colorForFaction(card.getFactionId()));
+        GradientDrawable bg = new GradientDrawable();
+        bg.setShape(GradientDrawable.RECTANGLE);
+        bg.setCornerRadius(12 * getResources().getDisplayMetrics().density);
+        bg.setColor(colorForFaction(card.getFactionId()));
+        cardView.setBackground(bg);
 
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(dp(104), dp(104));
         params.setMargins(0, 0, 8, 8);
