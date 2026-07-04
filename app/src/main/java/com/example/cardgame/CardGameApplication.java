@@ -1,76 +1,21 @@
 package com.example.cardgame;
 
 import android.app.Application;
-import android.content.Context;
-import android.util.Log;
 
-import com.example.cardgame.ai.HumanStyleAnalyzer;
-import com.example.cardgame.controller.BluetoothActionHandler;
-import com.example.cardgame.controller.BluetoothController;
-import com.example.cardgame.controller.GameActionHandler;
-import com.example.cardgame.controller.GameController;
 import com.example.cardgame.controller.narrative.NarrativeActionHandler;
 import com.example.cardgame.controller.narrative.NarrativeGameController;
-import com.example.cardgame.engine.GameEngine;
 
 public class CardGameApplication extends Application {
 
-    private static final String TAG = "CardGameApp";
-    
-    private static GameEngine gameEngine;
-    private static GameActionHandler gameActionHandler;
     private static NarrativeActionHandler narrativeActionHandler;
-    private static BluetoothActionHandler bluetoothActionHandler;
 
     @Override
     public void onCreate() {
         super.onCreate();
-
-        gameEngine = new GameEngine();
-        gameActionHandler = new GameController(gameEngine);
         narrativeActionHandler = new NarrativeGameController();
-
-        Log.d(TAG, "onCreate() - Application initialized, GameActionHandler ready.");
-        System.out.println("[CardGame][APP] Application initialized, GameActionHandler ready.");
-    }
-
-    @Override
-    public void onTerminate() {
-        Log.d(TAG, "onTerminate() called, shutting down HumanStyleAnalyzer executor...");
-        System.out.println("[CardGame][APP] onTerminate() called, shutting down HumanStyleAnalyzer executor...");
-        
-        boolean wasShutdown = HumanStyleAnalyzer.isExecutorShutdown();
-        Log.d(TAG, "Executor shutdown status before: " + wasShutdown);
-        
-        HumanStyleAnalyzer.shutdownExecutor();
-        
-        boolean isShutdown = HumanStyleAnalyzer.isExecutorShutdown();
-        Log.d(TAG, "Executor shutdown status after: " + isShutdown);
-        Log.d(TAG, "onTerminate() finished");
-        System.out.println("[CardGame][APP] onTerminate() finished, executor shutdown: " + isShutdown);
-        
-        super.onTerminate();
-    }
-
-    public static GameActionHandler getGameActionHandler() {
-        return gameActionHandler;
-    }
-
-    public static GameEngine getGameEngine() {
-        return gameEngine;
     }
 
     public static NarrativeActionHandler getNarrativeActionHandler() {
         return narrativeActionHandler;
-    }
-
-    public static synchronized BluetoothActionHandler getBluetoothActionHandler(Context context) {
-        if (bluetoothActionHandler == null) {
-            bluetoothActionHandler = new BluetoothController(
-                    context.getApplicationContext(),
-                    gameEngine
-            );
-        }
-        return bluetoothActionHandler;
     }
 }
