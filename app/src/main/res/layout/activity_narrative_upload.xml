@@ -78,7 +78,7 @@
                 android:id="@+id/rv_camp_list"
                 android:layout_width="match_parent"
                 android:layout_height="375dp"
-                android:background="#EEFFFDE8"
+                android:background="@drawable/bg_input_rounded"
                 android:gravity="top|start"
                 android:hint="粘贴文本"
                 android:inputType="textMultiLine"

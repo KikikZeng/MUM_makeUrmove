@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/p2"
@@ -136,10 +137,8 @@
         android:layout_marginEnd="4dp"
         android:gravity="center"
         android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="@id/tv_node_actions"
         app:layout_constraintEnd_toStartOf="@id/tv_node_actions"
-        app:layout_constraintTop_toBottomOf="@id/layout_progress_nodes"
-        app:layout_constraintVertical_bias="0.1">
+        app:layout_constraintTop_toBottomOf="@id/layout_progress_nodes">
 
         <TextView
             android:id="@+id/tv_name_top"
@@ -219,8 +218,8 @@
     <!-- 左侧对手 -->
     <LinearLayout
         android:id="@+id/layout_play_zone_left"
-        android:layout_width="260dp"
-        android:layout_height="89dp"
+        android:layout_width="261dp"
+        android:layout_height="107dp"
         android:layout_marginStart="4dp"
         android:layout_marginTop="4dp"
         android:layout_marginEnd="6dp"
@@ -253,8 +252,8 @@
 
     <LinearLayout
         android:id="@+id/layout_play_zone_right"
-        android:layout_width="255dp"
-        android:layout_height="89dp"
+        android:layout_width="246dp"
+        android:layout_height="107dp"
         android:layout_marginStart="6dp"
         android:layout_marginTop="4dp"
         android:layout_marginEnd="4dp"
@@ -291,12 +290,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="4dp"
+        android:layout_marginTop="90dp"
         android:gravity="center"
         android:orientation="horizontal"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/opponent_top"
-        app:layout_constraintBottom_toTopOf="@id/btn_submit_event_cards"
-        app:layout_constraintVertical_bias="0.25">
+        app:layout_constraintTop_toBottomOf="@id/layout_progress_nodes">
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -345,9 +343,7 @@
         android:gravity="center"
         android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/opponent_top"
-        app:layout_constraintBottom_toTopOf="@id/btn_abandon_narrative"
-        app:layout_constraintVertical_bias="0.25">
+        app:layout_constraintTop_toTopOf="@id/opponent_left">
 
         <FrameLayout
             android:layout_width="80dp"
@@ -393,26 +389,24 @@
         android:id="@+id/tv_user_faction"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="2dp"
+        android:layout_marginTop="50dp"
         android:textColor="#E8D5A3"
         android:textSize="14sp"
         android:textStyle="bold"
-        app:layout_constraintBottom_toTopOf="@id/avatar_user"
-        app:layout_constraintEnd_toEndOf="@id/btn_submit_event_cards"
-        app:layout_constraintStart_toStartOf="@id/btn_submit_event_cards" />
+        app:layout_constraintStart_toStartOf="@id/opponent_left"
+        app:layout_constraintTop_toBottomOf="@id/opponent_left" />
 
     <ImageView
         android:id="@+id/avatar_user"
         android:layout_width="36dp"
         android:layout_height="36dp"
-        android:layout_marginBottom="2dp"
+        android:layout_marginTop="2dp"
         android:background="@drawable/bg_avatar_border"
         android:clipToOutline="true"
         android:scaleType="centerCrop"
         android:src="@drawable/t4"
-        app:layout_constraintBottom_toTopOf="@id/btn_submit_event_cards"
-        app:layout_constraintEnd_toEndOf="@id/btn_submit_event_cards"
-        app:layout_constraintStart_toStartOf="@id/btn_submit_event_cards" />
+        app:layout_constraintStart_toStartOf="@id/opponent_left"
+        app:layout_constraintTop_toBottomOf="@id/tv_user_faction" />
 
     <Button
         android:id="@+id/btn_submit_event_cards"

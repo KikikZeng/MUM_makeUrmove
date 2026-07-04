@@ -37,7 +37,13 @@ public class NarrativeSettlementActivity extends AppCompatActivity {
             historySentenceText.setText("未获取到本局历史推演数据。");
             statsText.setText("暂无对局数据");
         } else {
-            titleText.setText(viewData.getStatus() == GameStatus.ABANDONED ? "中途放弃" : "推演完成");
+            if (viewData.getStatus() == GameStatus.ABANDONED) {
+                titleText.setText("中途放弃");
+            } else if (viewData.getHearts() <= 0.0) {
+                titleText.setText("推演失败");
+            } else {
+                titleText.setText("推演完成");
+            }
             historyResultText.setText(buildHistoryResult(viewData));
             historySentenceText.setText(buildHistorySentence(viewData));
             statsText.setText(buildStats(viewData));
@@ -60,6 +66,9 @@ public class NarrativeSettlementActivity extends AppCompatActivity {
     private String buildHistoryResult(NarrativeGameViewData viewData) {
         if (viewData.getStatus() == GameStatus.ABANDONED) {
             return "历史结果：未完成";
+        }
+        if (viewData.getHearts() <= 0.0) {
+            return "历史结果：推演失败，生命值耗尽";
         }
         return "历史结果：全阵营完成本段历史推演";
     }

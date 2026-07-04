@@ -83,11 +83,18 @@
                 android:layout_marginBottom="12dp" />
 
             <LinearLayout
-                android:id="@+id/layout_faction_list"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:minHeight="200dp"
-                android:orientation="vertical" />
+                android:layout_height="260dp"
+                android:background="@drawable/bg_faction_border"
+                android:padding="10dp"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:id="@+id/layout_faction_list"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+            </LinearLayout>
 
             <Button
                 android:id="@+id/btn_toggle_source_text"
@@ -117,9 +124,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="52dp"
                 android:layout_marginTop="6dp"
-                android:background="@drawable/bg_button_rounded"
+                android:background="@drawable/bg_button_green"
                 android:text="手牌预览"
-                android:textColor="#E8D5A3"
+                android:textColor="#F6F2E8"
                 android:textSize="16sp" />
 
             <HorizontalScrollView

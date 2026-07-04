@@ -113,6 +113,9 @@ public class NarrativeGameEngine {
 
     private void loseHeart(double amount) {
         gameState.setHearts(Math.max(0.0, gameState.getHearts() - amount));
+        if (gameState.getHearts() <= 0.0) {
+            gameState.setStatus(GameStatus.FINISHED);
+        }
     }
 
     private void advanceGlobalNode() {

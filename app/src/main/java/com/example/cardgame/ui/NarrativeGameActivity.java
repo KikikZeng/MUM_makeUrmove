@@ -530,7 +530,7 @@ public class NarrativeGameActivity extends AppCompatActivity {
         if (result.getPlayType() == NarrativePlayType.WRONG) {
             Toast.makeText(this, "选择不符合当前历史节点，请重新选择", Toast.LENGTH_SHORT).show();
             selectedCardIds.clear();
-            renderHandCards(currentHand);
+            renderGame();
             return;
         }
 
