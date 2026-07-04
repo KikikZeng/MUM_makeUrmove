@@ -45,6 +45,10 @@ public class GlmLLMClient {
     }
 
     public String chat(List<ChatMessage> messages) throws IOException {
+        return chat(messages, 0.2);
+    }
+
+    public String chat(List<ChatMessage> messages, double temperature) throws IOException {
         if (apiKey == null || apiKey.trim().isEmpty()) {
             throw new IOException("GLM_API_KEY is empty");
         }
@@ -52,7 +56,7 @@ public class GlmLLMClient {
         GlmChatRequest requestBody = new GlmChatRequest();
         requestBody.setModel(model);
         requestBody.setMessages(messages);
-        requestBody.setTemperature(0.2);
+        requestBody.setTemperature(temperature);
         requestBody.setTopP(0.9);
         requestBody.setMaxTokens(4096);
 

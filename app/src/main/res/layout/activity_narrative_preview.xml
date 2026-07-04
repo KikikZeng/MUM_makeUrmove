@@ -95,7 +95,6 @@
                 android:layout_height="52dp"
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_button_rounded"
-                android:backgroundTint="#2E4A5A"
                 android:text="查看原文"
                 android:textColor="#E8D5A3"
                 android:textSize="16sp" />
@@ -119,7 +118,6 @@
                 android:layout_height="52dp"
                 android:layout_marginTop="6dp"
                 android:background="@drawable/bg_button_rounded"
-                android:backgroundTint="#2E4A5A"
                 android:text="手牌预览"
                 android:textColor="#E8D5A3"
                 android:textSize="16sp" />
@@ -144,8 +142,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="52dp"
                 android:layout_marginTop="6dp"
-                android:background="@drawable/bg_button_rounded"
-                android:backgroundTint="#3D523D"
+                android:background="@drawable/bg_button_green"
                 android:text="历史线预览"
                 android:textColor="#F6F2E8"
                 android:textSize="16sp" />
@@ -172,7 +169,6 @@
                     android:layout_marginEnd="8dp"
                     android:layout_weight="1"
                     android:background="@drawable/bg_button_rounded"
-                    android:backgroundTint="#2E4A5A"
                     android:text="重新解析"
                     android:textColor="#E8D5A3"
                     android:textSize="16sp" />
@@ -183,8 +179,7 @@
                     android:layout_height="52dp"
                     android:layout_marginStart="8dp"
                     android:layout_weight="1"
-                    android:background="@drawable/bg_button_rounded"
-                    android:backgroundTint="#7A2E2E"
+                    android:background="@drawable/bg_button_red"
                     android:text="进入对局"
                     android:textColor="#F6F2E8"
                     android:textSize="16sp" />

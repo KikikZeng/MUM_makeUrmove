@@ -22,10 +22,16 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        def apiKey = project.properties.get('DEEPSEEK_API_KEY') ?: ''
-        buildConfigField "String", "DEEPSEEK_API_KEY", "\"$apiKey\""
-        // 临时测试：使用硬编码值
-        buildConfigField "String", "VIVO_APP_KEY", "\"sk-xuanji-2026006675-cnl6U3V3QlVsTVBCZUlBeA==\""
+        // 从 local.properties 读取 API Key（project.properties 无法读取 local.properties）
+        def localProps = new Properties()
+        def localPropsFile = rootProject.file('local.properties')
+        if (localPropsFile.exists()) {
+            localProps.load(localPropsFile.newInputStream())
+        }
+        def deepseekKey = localProps.getProperty('DEEPSEEK_API_KEY', '')
+        buildConfigField "String", "DEEPSEEK_API_KEY", "\"$deepseekKey\""
+        def vivoKey = localProps.getProperty('VIVO_API_KEY', '')
+        buildConfigField "String", "VIVO_API_KEY", "\"$vivoKey\""
     }
 
     buildTypes {

@@ -30,16 +30,16 @@ public class NarrativeUploadActivity extends AppCompatActivity {
         setContentView(R.layout.activity_narrative_upload);
 
         inputText = findViewById(R.id.rv_camp_list);
+        inputText.setOnTouchListener((v, event) -> {
+            v.getParent().requestDisallowInterceptTouchEvent(true);
+            return false;
+        });
         Button btnSample = findViewById(R.id.btn_hand_preview);
         parseButton = findViewById(R.id.btn_timeline_preview);
         previewButton = findViewById(R.id.btn_reparse);
         counterText = findViewById(R.id.tv_game_duration);
         ImageButton btnBack = findViewById(R.id.btn_back);
         Button btnClear = findViewById(R.id.btn_enter_game);
-
-        inputText.setText(SAMPLE_TEXT);
-        updateCounter();
-        updatePreviewButton(false);
 
         inputText.addTextChangedListener(new TextWatcher() {
             @Override
@@ -56,6 +56,9 @@ public class NarrativeUploadActivity extends AppCompatActivity {
             public void afterTextChanged(Editable s) {
             }
         });
+
+        updateCounter();
+        updatePreviewButton(false);
 
         btnSample.setOnClickListener(v -> inputText.setText(SAMPLE_TEXT));
         btnClear.setOnClickListener(v -> inputText.setText(""));

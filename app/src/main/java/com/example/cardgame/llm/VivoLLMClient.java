@@ -3,7 +3,6 @@ package com.example.cardgame.llm;
 import android.util.Log;
 
 import com.example.cardgame.llm.model.ChatMessage;
-import com.google.gson.Gson;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -20,7 +19,6 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-@SuppressWarnings("SpellCheckingInspection")
 public class VivoLLMClient {
 
     private static final String TAG = "VivoLLMClient";
@@ -35,14 +33,12 @@ public class VivoLLMClient {
     private static final String API_KEY = "sk-xuanji-2026006675-cnl6U3V3QlVsTVBCZUlBeA==";
 
     private final OkHttpClient client;
-    private final Gson gson;   // 仍保留，但只用于深度解析（未用）
 
     public VivoLLMClient() {
         this.client = new OkHttpClient.Builder()
                 .connectTimeout(30, TimeUnit.SECONDS)
                 .readTimeout(60, TimeUnit.SECONDS)
                 .build();
-        this.gson = new Gson();
     }
 
     // 默认温度 0.2，适合结构化输出
@@ -73,8 +69,8 @@ public class VivoLLMClient {
             body.put("temperature", temperature);
             body.put("max_tokens", 4096);
             body.put("stream", false);
-            // 可选：开启轻量推理，改善逻辑
-            // body.put("reasoning_effort", "low");
+            // 开启轻量推理，改善逻辑（main 分支带来的优化）
+            body.put("reasoning_effort", "minimal");
 
             JSONArray messagesArray = new JSONArray();
             for (ChatMessage msg : messages) {
@@ -130,6 +126,7 @@ public class VivoLLMClient {
                 return content;
 
             } catch (JSONException e) {
+                Log.e(TAG, "JSON parsing failed, raw response: " + responseBody);
                 throw new IOException("Failed to parse response JSON: " + e.getMessage() + ", body: " + responseBody, e);
             }
         }

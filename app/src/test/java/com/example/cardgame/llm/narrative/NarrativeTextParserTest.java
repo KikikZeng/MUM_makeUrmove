@@ -1,7 +1,7 @@
 package com.example.cardgame.llm.narrative;
 
 import com.example.cardgame.dto.narrative.ParseResult;
-import com.example.cardgame.llm.GlmLLMClient;
+import com.example.cardgame.llm.VivoLLMClient;
 import com.example.cardgame.llm.model.ChatMessage;
 
 import org.junit.Test;
@@ -18,7 +18,7 @@ public class NarrativeTextParserTest {
     @Test
     public void parse_acceptsJsonInsideMarkdownFence() {
         NarrativeTextParser parser = new NarrativeTextParser(
-                new FakeGlmClient(validJsonFence()),
+                new FakeVivoClient(validJsonFence()),
                 new NarrativePromptBuilder(),
                 new NarrativeParseValidator(),
                 new FallbackNarrativeDataProvider()
@@ -34,7 +34,7 @@ public class NarrativeTextParserTest {
     @Test
     public void parse_returnsFallbackWhenClientFails() {
         NarrativeTextParser parser = new NarrativeTextParser(
-                new FailingGlmClient(),
+                new FailingVivoClient(),
                 new NarrativePromptBuilder(),
                 new NarrativeParseValidator(),
                 new FallbackNarrativeDataProvider()
@@ -61,11 +61,10 @@ public class NarrativeTextParserTest {
                 + "}\n```";
     }
 
-    private static class FakeGlmClient extends GlmLLMClient {
+    private static class FakeVivoClient extends VivoLLMClient {
         private final String content;
 
-        FakeGlmClient(String content) {
-            super("", "", "");
+        FakeVivoClient(String content) {
             this.content = content;
         }
 
@@ -73,15 +72,21 @@ public class NarrativeTextParserTest {
         public String chat(List<ChatMessage> messages) {
             return content;
         }
+
+        @Override
+        public String chat(List<ChatMessage> messages, double temperature) {
+            return content;
+        }
     }
 
-    private static class FailingGlmClient extends GlmLLMClient {
-        FailingGlmClient() {
-            super("", "", "");
+    private static class FailingVivoClient extends VivoLLMClient {
+        @Override
+        public String chat(List<ChatMessage> messages) throws IOException {
+            throw new IOException("boom");
         }
 
         @Override
-        public String chat(List<ChatMessage> messages) throws IOException {
+        public String chat(List<ChatMessage> messages, double temperature) throws IOException {
             throw new IOException("boom");
         }
     }

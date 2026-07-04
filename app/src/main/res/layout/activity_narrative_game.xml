@@ -172,8 +172,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="29dp"
                 android:layout_marginTop="8dp"
-                android:background="@drawable/bg_button_rounded"
-                android:backgroundTint="#7A2E2E"
+                android:background="@drawable/bg_button_red"
                 android:text="出牌"
                 android:textColor="#F6F2E8"
                 android:textSize="15sp"
@@ -185,7 +184,6 @@
                 android:layout_height="30dp"
                 android:layout_marginTop="6dp"
                 android:background="@drawable/bg_button_rounded"
-                android:backgroundTint="#2E4A5A"
                 android:text="放弃"
                 android:textColor="#E8D5A3"
                 android:textSize="15sp" />
