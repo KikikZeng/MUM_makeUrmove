@@ -1,0 +1,10 @@
+# 将此文件复制为 local.properties 并填写你的 API Key
+
+# Android SDK 路径（根据你的实际安装路径修改）
+sdk.dir=C:\\Users\\YourName\\AppData\\Local\\Android\\Sdk
+
+# vivo 蓝心大模型 API Key（在 vivo 开放平台申请）
+VIVO_API_KEY=your_vivo_api_key_here
+
+# 备用：如果没有配置 VIVO_API_KEY，会自动使用此 Key
+DEEPSEEK_API_KEY=your_api_key_here

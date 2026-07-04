@@ -2,8 +2,6 @@ package com.example.cardgame.llm;
 
 import android.util.Log;
 
-import com.example.cardgame.BuildConfig;
-
 import com.example.cardgame.llm.model.ChatMessage;
 
 import org.json.JSONArray;
@@ -25,35 +23,30 @@ public class VivoLLMClient {
 
     private static final String TAG = "VivoLLMClient";
 
+    // 官方 API 地址
     private static final String BASE_URL = "https://api-ai.vivo.com.cn/v1/chat/completions";
 
+    // 使用轻量级 Mini 模型，速度快且成本低
     private static final String MODEL_NAME = "Doubao-Seed-2.0-mini";
 
+    // 硬编码 API Key（参赛专用，私有仓库安全）
+    private static final String API_KEY = "sk-xuanji-2026006675-cnl6U3V3QlVsTVBCZUlBeA==";
+
     private final OkHttpClient client;
-    private final String apiKey;
 
     public VivoLLMClient() {
         this.client = new OkHttpClient.Builder()
                 .connectTimeout(30, TimeUnit.SECONDS)
                 .readTimeout(60, TimeUnit.SECONDS)
                 .build();
-
-        String key = BuildConfig.VIVO_API_KEY;
-        if (key == null || key.isEmpty() || "your_vivo_api_key".equals(key)) {
-            key = BuildConfig.DEEPSEEK_API_KEY;
-            if (key != null && !key.isEmpty() && !"your_deepseek_api_key".equals(key)) {
-                Log.w(TAG, "VIVO_API_KEY not set, using DEEPSEEK_API_KEY as fallback.");
-            } else {
-                Log.e(TAG, "API Key is not configured! Please set VIVO_API_KEY in local.properties");
-            }
-        }
-        this.apiKey = key;
     }
 
+    // 默认温度 0.2，适合结构化输出
     public String chat(List<ChatMessage> messages) throws IOException {
         return chat(messages, 0.2);
     }
 
+    // 主方法，支持自定义温度
     public String chat(List<ChatMessage> messages, double temperature) throws IOException {
         Log.d(TAG, "=== 开始调用 vivo 蓝心大模型 ===");
         Log.d(TAG, "Model: " + MODEL_NAME + ", temperature: " + temperature);
@@ -67,18 +60,17 @@ public class VivoLLMClient {
             Log.d(TAG, "Message[" + i + "] role=" + msg.getRole() + ", content=" + contentPreview);
         }
 
-        if (apiKey == null || apiKey.isEmpty() || "your_vivo_api_key".equals(apiKey)) {
-            throw new IOException("VIVO_API_KEY is not configured. Please add VIVO_API_KEY=your_key to local.properties");
-        }
-
         String requestId = UUID.randomUUID().toString();
 
+        // 构建 JSON 请求体
         JSONObject body = new JSONObject();
         try {
             body.put("model", MODEL_NAME);
             body.put("temperature", temperature);
             body.put("max_tokens", 4096);
             body.put("stream", false);
+            // 开启轻量推理，改善逻辑（main 分支带来的优化）
+            body.put("reasoning_effort", "minimal");
 
             JSONArray messagesArray = new JSONArray();
             for (ChatMessage msg : messages) {
@@ -100,7 +92,7 @@ public class VivoLLMClient {
 
         Request request = new Request.Builder()
                 .url(url)
-                .header("Authorization", "Bearer " + apiKey)
+                .header("Authorization", "Bearer " + API_KEY)
                 .header("Content-Type", "application/json")
                 .post(RequestBody.create(body.toString(), MediaType.parse("application/json")))
                 .build();
@@ -115,6 +107,7 @@ public class VivoLLMClient {
                 throw new IOException("API request failed with code: " + response.code() + ", body: " + responseBody);
             }
 
+            // 解析响应，提取 content
             try {
                 JSONObject jsonResponse = new JSONObject(responseBody);
                 JSONArray choices = jsonResponse.getJSONArray("choices");
