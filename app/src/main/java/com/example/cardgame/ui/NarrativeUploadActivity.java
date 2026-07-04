@@ -1,5 +1,6 @@
 package com.example.cardgame.ui;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
@@ -39,6 +40,7 @@ public class NarrativeUploadActivity extends AppCompatActivity {
         previewButton = findViewById(R.id.btn_reparse);
         counterText = findViewById(R.id.tv_game_duration);
         ImageButton btnBack = findViewById(R.id.btn_back);
+        ImageButton btnHelp = findViewById(R.id.btn_help);
         Button btnClear = findViewById(R.id.btn_enter_game);
 
         inputText.addTextChangedListener(new TextWatcher() {
@@ -63,6 +65,7 @@ public class NarrativeUploadActivity extends AppCompatActivity {
         btnSample.setOnClickListener(v -> inputText.setText(SAMPLE_TEXT));
         btnClear.setOnClickListener(v -> inputText.setText(""));
         btnBack.setOnClickListener(v -> finish());
+        btnHelp.setOnClickListener(v -> showHelpDialog());
         parseButton.setOnClickListener(v -> parseAndPreview());
         previewButton.setOnClickListener(v -> openPreview());
     }
@@ -97,6 +100,14 @@ public class NarrativeUploadActivity extends AppCompatActivity {
             return;
         }
         startActivity(new Intent(this, NarrativePreviewActivity.class));
+    }
+
+    private void showHelpDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("使用说明")
+                .setMessage("在此页面输入或粘贴一段叙事文本（如历史事件、小说情节等），点击「开始解析」后系统将自动分析文本中的阵营、事件和卡牌。\n\n您也可以点击「示例文本」查看样例，或点击「结果预览」查看解析结果。")
+                .setPositiveButton("知道了", (dialog, which) -> dialog.dismiss())
+                .show();
     }
 
     private void updateCounter() {
