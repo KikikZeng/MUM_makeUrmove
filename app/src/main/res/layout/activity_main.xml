@@ -20,12 +20,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="32dp"
-            android:text="MUM"
-            android:textColor="#E8D5A3"
-            android:textSize="100sp"
+            android:text="历历在目"
+            android:textColor="#B89B4A"
+            android:textSize="70sp"
             android:textStyle="bold"
-            android:gravity="center"
-            android:fontFamily="sans-serif-black" />
+            android:gravity="center" />
 
         <Button
             android:id="@+id/btn_start"
