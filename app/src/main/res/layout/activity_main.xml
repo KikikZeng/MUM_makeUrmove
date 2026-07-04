@@ -43,7 +43,7 @@
             android:layout_height="56dp"
             android:layout_marginBottom="16dp"
             android:background="@drawable/bg_button_rounded"
-            android:text="开始新游戏"
+            android:text="设置ID"
             android:textColor="#E8D5A3"
             android:textSize="18sp" />
 

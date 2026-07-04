@@ -65,6 +65,7 @@ public class NarrativePreviewActivity extends AppCompatActivity {
         startButton = findViewById(R.id.btn_start_narrative_game);
         reparseButton = btnReparse;
         ImageButton btnBack = findViewById(R.id.btn_preview_back);
+        ImageButton btnHelp = findViewById(R.id.btn_help);
 
         btnToggleSource.setOnClickListener(v -> toggleSourceText());
         btnToggleHand.setOnClickListener(v -> toggleHandPreview());
@@ -72,6 +73,7 @@ public class NarrativePreviewActivity extends AppCompatActivity {
         btnReparse.setOnClickListener(v -> confirmReparseIfNeeded());
         startButton.setOnClickListener(v -> startGame());
         btnBack.setOnClickListener(v -> finish());
+        btnHelp.setOnClickListener(v -> showHelpDialog());
 
         sourceText.addTextChangedListener(new TextWatcher() {
             @Override
@@ -179,6 +181,14 @@ public class NarrativePreviewActivity extends AppCompatActivity {
         timelineExpanded = !timelineExpanded;
         timelineContainer.setVisibility(timelineExpanded ? View.VISIBLE : View.GONE);
         renderTimeline();
+    }
+
+    private void showHelpDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("使用说明")
+                .setMessage("在此页面可以查看解析结果：选择左侧阵营查看其手牌，展开「历史节点」查看推演流程。\n\n确认无误后选择要扮演的阵营，点击「开始推演」进入对局。如需修改文本，可展开原文编辑后重新解析。")
+                .setPositiveButton("知道了", (dialog, which) -> dialog.dismiss())
+                .show();
     }
 
     private void confirmReparseIfNeeded() {
