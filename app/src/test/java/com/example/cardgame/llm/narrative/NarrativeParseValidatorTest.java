@@ -9,6 +9,7 @@ import com.example.cardgame.model.narrative.NarrativeNode;
 
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -17,6 +18,7 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 public class NarrativeParseValidatorTest {
@@ -39,9 +41,49 @@ public class NarrativeParseValidatorTest {
         ParseResult result = validator.validateOrFallback(validParseResultWithMissingFactionEntry());
 
         assertFalse(result.isFallbackUsed());
-        assertEquals(1, result.getTotalNodes());
+        assertEquals(2, result.getTotalNodes());
         assertTrue(result.getNodes().get(0).getFactionCardIds().containsKey("rebel"));
         assertTrue(result.getNodes().get(0).getCardIdsForFaction("rebel").isEmpty());
+    }
+
+    @Test
+    public void validateOrFallback_returnsFallbackWhenFactionHasNoAssignedCards() {
+        ParseResult parseResult = validParseResultWithMissingFactionEntry();
+        parseResult.getNodes().remove(1);
+
+        ParseResult result = validator.validateOrFallback(parseResult);
+
+        assertTrue(result.isFallbackUsed());
+    }
+
+    @Test
+    public void validateOrFallback_prunesUnassignedFactionWithoutFallbackWhenEnoughFactionsRemain() {
+        ParseResult parseResult = validParseResultWithMissingFactionEntry();
+        parseResult.getFactions().add(new Faction("local", "地方势力", "事件不足的地方阵营"));
+        parseResult.getCards().add(new EventCard("l1", "local", "地方观望", "地方保持观望", "地方态度"));
+
+        ParseResult result = validator.validateOrFallback(parseResult);
+
+        assertFalse(result.isFallbackUsed());
+        assertEquals(2, result.getFactions().size());
+        assertEquals(2, result.getCards().size());
+        assertFalse(result.getNodes().get(0).getFactionCardIds().containsKey("local"));
+    }
+
+    @Test
+    public void validateOrFallback_repairsRepeatedCardDisplayTextWithoutFallback() {
+        ParseResult parseResult = validParseResultWithMissingFactionEntry();
+        EventCard card = parseResult.getCards().get(0);
+        card.setTitle("清帝退位");
+        card.setSummary("清帝退位");
+        card.setSourceHint("清帝退位");
+
+        ParseResult result = validator.validateOrFallback(parseResult);
+        EventCard repairedCard = result.getCards().get(0);
+
+        assertFalse(result.isFallbackUsed());
+        assertNotEquals(repairedCard.getTitle(), repairedCard.getSummary());
+        assertNotEquals(repairedCard.getTitle(), repairedCard.getSourceHint());
     }
 
     @Test
@@ -81,16 +123,18 @@ public class NarrativeParseValidatorTest {
     }
 
     private ParseResult validParseResultWithMissingFactionEntry() {
-        List<Faction> factions = Arrays.asList(
+        List<Faction> factions = new ArrayList<>(Arrays.asList(
                 new Faction("tang", "唐廷", "中央朝廷"),
                 new Faction("rebel", "叛军", "反叛势力")
-        );
-        List<EventCard> cards = Collections.singletonList(
-                new EventCard("t1", "tang", "调兵", "唐廷调兵", "第1段")
-        );
-        List<NarrativeNode> nodes = Collections.singletonList(
-                new NarrativeNode(0, "起势", "局势开始变化", "第1段", mapOf("tang", list("t1")))
-        );
+        ));
+        List<EventCard> cards = new ArrayList<>(Arrays.asList(
+                new EventCard("t1", "tang", "调兵", "唐廷调兵", "第1段"),
+                new EventCard("r1", "rebel", "起兵", "叛军起兵", "第2段")
+        ));
+        List<NarrativeNode> nodes = new ArrayList<>(Arrays.asList(
+                new NarrativeNode(0, "起势", "局势开始变化", "第1段", mapOf("tang", list("t1"))),
+                new NarrativeNode(1, "反叛", "反叛势力行动", "第2段", mapOf("rebel", list("r1")))
+        ));
         return new ParseResult(factions, cards, nodes, 0, true);
     }
 

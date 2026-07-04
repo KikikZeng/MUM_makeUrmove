@@ -85,7 +85,8 @@ public class NarrativeTextParser {
             return parseResult;
         }
 
-        Log.w(TAG, "First parse attempt invalid, retrying with temperature " + RETRY_TEMPERATURE + "...");
+        Log.w(TAG, "First parse attempt invalid: " + parseValidator.getInvalidReason(parseResult));
+        Log.w(TAG, "Retrying with temperature " + RETRY_TEMPERATURE + "...");
         try {
             Thread.sleep(500);
         } catch (InterruptedException ie) {
@@ -105,7 +106,14 @@ public class NarrativeTextParser {
             return fallbackDataProvider.getFallbackData();
         }
 
-        return parseValidator.validateOrFallback(parseResult);
+        String invalidReason = parseValidator.getInvalidReason(parseResult);
+        if (invalidReason != null) {
+            Log.e(TAG, "Second parse attempt invalid, using fallback: " + invalidReason);
+            return fallbackDataProvider.getFallbackData();
+        }
+        Log.d(TAG, "Second parse attempt valid, normalizing data");
+        parseValidator.normalize(parseResult);
+        return parseResult;
     }
 
     private String sanitizeText(String rawText) throws IOException {
