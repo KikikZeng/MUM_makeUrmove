@@ -86,16 +86,20 @@
                 android:textColor="#2B1A12"
                 android:textColorHint="#8A6D5C"
                 android:textSize="15sp"
-                android:scrollbars="vertical" />
+                android:scrollbars="vertical"
+                android:scrollbarStyle="insideInset"
+                android:scrollbarFadeDuration="0"
+                android:overScrollMode="always"
+                android:isScrollContainer="true" />
 
             <Button
                 android:id="@+id/btn_hand_preview"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:layout_marginTop="20dp"
+                android:background="@drawable/bg_button_rounded"
                 android:text="示例文本"
                 android:textColor="#E8D5A3"
-                android:backgroundTint="#2E4A5A"
                 android:textSize="16sp" />
 
             <Button
@@ -103,9 +107,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:layout_marginTop="10dp"
+                android:background="@drawable/bg_button_green"
                 android:text="开始解析"
                 android:textColor="#F6F2E8"
-                android:backgroundTint="#3D523D"
                 android:textSize="16sp" />
 
             <LinearLayout
@@ -121,9 +125,9 @@
                     android:layout_height="48dp"
                     android:layout_weight="1"
                     android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_button_rounded"
                     android:text="结果预览"
                     android:textColor="#E8D5A3"
-                    android:backgroundTint="#2E4A5A"
                     android:textSize="16sp" />
 
                 <Button
@@ -132,9 +136,9 @@
                     android:layout_height="48dp"
                     android:layout_weight="1"
                     android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_button_red"
                     android:text="清空文本"
                     android:textColor="#F6F2E8"
-                    android:backgroundTint="#7A2E2E"
                     android:textSize="16sp" />
             </LinearLayout>
         </LinearLayout>

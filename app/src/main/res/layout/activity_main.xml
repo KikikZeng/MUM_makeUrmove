@@ -32,9 +32,8 @@
             android:layout_width="200dp"
             android:layout_height="56dp"
             android:layout_marginBottom="16dp"
-            android:background="@drawable/bg_button_rounded"
-            android:backgroundTint="#3D523D"
-            android:text="开始游戏"
+            android:background="@drawable/bg_button_green"
+            android:text="开始推演"
             android:textColor="#F6F2E8"
             android:textSize="18sp" />
 
@@ -44,8 +43,7 @@
             android:layout_height="56dp"
             android:layout_marginBottom="16dp"
             android:background="@drawable/bg_button_rounded"
-            android:backgroundTint="#2E4A5A"
-            android:text="设置ID"
+            android:text="开始新游戏"
             android:textColor="#E8D5A3"
             android:textSize="18sp" />
 
@@ -55,8 +53,7 @@
             android:layout_height="56dp"
             android:layout_marginBottom="16dp"
             android:background="@drawable/bg_button_rounded"
-            android:backgroundTint="#2E4A5A"
-            android:text="查看规则"
+            android:text="规则说明"
             android:textColor="#E8D5A3"
             android:textSize="18sp" />
 
@@ -64,9 +61,8 @@
             android:id="@+id/btn_exit"
             android:layout_width="200dp"
             android:layout_height="56dp"
-            android:background="@drawable/bg_button_rounded"
-            android:backgroundTint="#7A2E2E"
-            android:text="退出"
+            android:background="@drawable/bg_button_red"
+            android:text="退出推演"
             android:textColor="#F6F2E8"
             android:textSize="18sp" />
     </LinearLayout>
