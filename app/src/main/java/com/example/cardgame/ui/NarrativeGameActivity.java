@@ -4,8 +4,15 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.StyleSpan;
+import android.graphics.Typeface;
 import android.view.Gravity;
+import android.graphics.Outline;
+import android.util.Log;
 import android.view.View;
+import android.view.ViewOutlineProvider;
 import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
@@ -30,11 +37,9 @@ import java.util.List;
 import java.util.Map;
 
 public class NarrativeGameActivity extends AppCompatActivity {
-    private TextView stageTitleText;
     private TextView stageHintText;
     private TextView narrationText;
     private TextView aiProgressText;
-    private TextView nodeActionsText;
     private TextView userFactionText;
     private LinearLayout progressNodeContainer;
     private LinearLayout heartContainer;
@@ -43,7 +48,6 @@ public class NarrativeGameActivity extends AppCompatActivity {
     private LinearLayout playerPlayedCardsContainer;
     private TextView lastRoundLabel;
     private TextView playInstructionText;
-    private FrameLayout factionSeatContainer;
     private Button submitButton;
     private Button btnAbandon;
     private boolean settlementOpened;
@@ -76,11 +80,9 @@ public class NarrativeGameActivity extends AppCompatActivity {
         setContentView(R.layout.activity_narrative_game_board);
         hideSystemUI();
 
-        stageTitleText = findViewById(R.id.tv_stage_title);
         stageHintText = findViewById(R.id.tv_stage_hint);
         narrationText = findViewById(R.id.tv_narration);
         aiProgressText = findViewById(R.id.tv_ai_progress);
-        nodeActionsText = findViewById(R.id.tv_node_actions);
         userFactionText = findViewById(R.id.tv_user_faction);
         progressNodeContainer = findViewById(R.id.layout_progress_nodes);
         heartContainer = findViewById(R.id.layout_heart_container);
@@ -95,13 +97,11 @@ public class NarrativeGameActivity extends AppCompatActivity {
         opponentTop = findViewById(R.id.opponent_top);
         opponentLeft = findViewById(R.id.opponent_left);
         opponentRight = findViewById(R.id.opponent_right);
-        factionSeatContainer = new FrameLayout(this);
         submitButton = findViewById(R.id.btn_submit_event_cards);
         btnAbandon = findViewById(R.id.btn_abandon_narrative);
 
         submitButton.setOnClickListener(v -> submitCards());
         btnAbandon.setOnClickListener(v -> confirmAbandon());
-        findViewById(R.id.btn_game_back).setOnClickListener(v -> finish());
 
         renderGame();
     }
@@ -120,12 +120,10 @@ public class NarrativeGameActivity extends AppCompatActivity {
         renderFactionSeats(viewData);
         renderHearts(viewData.getHearts());
         userFactionText.setText(findFactionName(viewData, viewData.getUserFactionId()));
-        stageTitleText.setText(viewData.getStageTitle() != null ? viewData.getStageTitle() : "推演完成");
-        stageHintText.setText(viewData.getStageHint() != null ? viewData.getStageHint() : "");
-        narrationText.setText(viewData.getOpeningNarration() != null ? viewData.getOpeningNarration() : "");
+        stageHintText.setText("阶段提示：" + (viewData.getStageHint() != null ? viewData.getStageHint() : ""));
+        narrationText.setText("旁白：" + (viewData.getOpeningNarration() != null ? viewData.getOpeningNarration() : ""));
         aiProgressText.setText(formatAiProgress(viewData));
         aiProgressText.setVisibility(aiProgressText.getText().length() > 0 && !aiProgressText.getText().toString().equals("AI 阵营进度：") ? View.VISIBLE : View.GONE);
-        nodeActionsText.setText(formatLastResolvedNode(viewData));
         submitButton.setEnabled(!viewData.isGameOver());
 
         if (viewData.isGameOver()) {
@@ -148,6 +146,7 @@ public class NarrativeGameActivity extends AppCompatActivity {
     // ========== 回合制核心 ==========
 
     private void initTurnForNode(NarrativeGameViewData viewData) {
+        Log.d("HAND", ">>> initTurnForNode: nodeIndex=" + viewData.getGlobalProgress());
         // 取消所有残留的延迟任务，防止旧任务污染新状态
         turnHandler.removeCallbacksAndMessages(null);
 
@@ -185,7 +184,7 @@ public class NarrativeGameActivity extends AppCompatActivity {
         if (turnOrder.isEmpty()) {
             // 无人有牌，后端推进
             CardGameApplication.getNarrativeActionHandler().submitEventCards(new ArrayList<>());
-            renderGame();
+            advanceToNextNode();
             return;
         }
 
@@ -238,6 +237,7 @@ public class NarrativeGameActivity extends AppCompatActivity {
     }
 
     private void executeAiTurn(String aiFactionId) {
+        Log.d("HAND", ">>> executeAiTurn: faction=" + aiFactionId);
         // 重新获取最新 viewData，避免使用过期引用
         NarrativeGameViewData viewData = CardGameApplication.getNarrativeActionHandler().getNarrativeGameViewData();
         List<EventCard> aiCards = nodeCardsByFaction.get(aiFactionId);
@@ -249,11 +249,12 @@ public class NarrativeGameActivity extends AppCompatActivity {
         renderAiPlayedCards(viewData, aiFactionId, aiCards);
         factionPlayed.put(aiFactionId, true);
 
-        // 维持 3 秒后进入下一回合
-        turnHandler.postDelayed(() -> advanceTurn(viewData), 3000);
+        // 维持 6 秒后进入下一回合
+        turnHandler.postDelayed(() -> advanceTurn(viewData), 6000);
     }
 
     private void advanceTurn(NarrativeGameViewData viewData) {
+        Log.d("HAND", ">>> advanceTurn: currentTurnIndex=" + currentTurnIndex + " turnOrder.size=" + turnOrder.size());
         currentTurnIndex++;
         // 跳过已出牌的阵营，找到下一个未出牌的
         while (currentTurnIndex < turnOrder.size()) {
@@ -270,6 +271,7 @@ public class NarrativeGameActivity extends AppCompatActivity {
     }
 
     private void advanceNode(NarrativeGameViewData viewData) {
+        Log.d("HAND", ">>> advanceNode");
         // 游戏已结束
         if (viewData.isGameOver()) {
             openSettlement();
@@ -277,7 +279,7 @@ public class NarrativeGameActivity extends AppCompatActivity {
         }
         // 所有阵营已出完牌，后端推进到下一节点
         CardGameApplication.getNarrativeActionHandler().submitEventCards(new ArrayList<>());
-        renderGame();
+        advanceToNextNode();
     }
 
     private void highlightCurrentFaction(NarrativeGameViewData viewData) {
@@ -309,6 +311,7 @@ public class NarrativeGameActivity extends AppCompatActivity {
     }
 
     private void renderAiPlayedCards(NarrativeGameViewData viewData, String aiFactionId, List<EventCard> cards) {
+        Log.d("HAND", ">>> renderAiPlayedCards: faction=" + aiFactionId + " cards=" + cards.size());
         lastRoundCardsContainer.removeAllViews();
         String aiName = findFactionName(viewData, aiFactionId);
         lastRoundLabel.setText("上一轮出牌：" + aiName);
@@ -316,16 +319,17 @@ public class NarrativeGameActivity extends AppCompatActivity {
         for (EventCard card : cards) {
             TextView cardView = new TextView(this);
             cardView.setText(buildCardText(card));
-             cardView.setTextSize(9);
+            cardView.setTextSize(9);
             cardView.setTextColor(0xFF2B1A12);
-            cardView.setBackgroundResource(R.drawable.bg_card_played);
+            cardView.setBackgroundResource(R.drawable.a2);
             cardView.setGravity(Gravity.CENTER);
             cardView.setIncludeFontPadding(false);
             cardView.setPadding(dp(3), dp(3), dp(3), dp(3));
 
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(dp(80), dp(66));
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(dp(66), dp(88));
             params.setMargins(0, 0, 4, 0);
             cardView.setLayoutParams(params);
+            applyRoundedCorners(cardView, 8);
             lastRoundCardsContainer.addView(cardView);
         }
     }
@@ -339,15 +343,20 @@ public class NarrativeGameActivity extends AppCompatActivity {
         for (int i = 0; i < total; i++) {
             final int index = i;
             TextView node = new TextView(this);
-            node.setText(String.valueOf(i + 1));
+            String title = (i < titles.size() && titles.get(i) != null) ? titles.get(i) : "";
+            if (title.length() > 4) {
+                title = title.substring(0, 4) + "..";
+            }
+            node.setText((i + 1) + " " + title);
             node.setGravity(Gravity.CENTER);
-            node.setTextSize(10);
+            node.setTextSize(9);
             node.setTextColor(0xFFFFFFFF);
             node.setTypeface(null, android.graphics.Typeface.BOLD);
+            node.setSingleLine(true);
             node.setBackgroundColor(i <= viewData.getGlobalProgress() ? 0xFF3D523D : 0x663D523D);
             node.setOnClickListener(v -> {
-                String title = index < titles.size() ? titles.get(index) : "历史节点 " + (index + 1);
-                Toast.makeText(this, title, Toast.LENGTH_SHORT).show();
+                String fullTitle = index < titles.size() ? titles.get(index) : "历史节点 " + (index + 1);
+                Toast.makeText(this, fullTitle, Toast.LENGTH_SHORT).show();
             });
 
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, dp(18), 1);
@@ -418,47 +427,131 @@ public class NarrativeGameActivity extends AppCompatActivity {
         return 0.16f;
     }
 
+    // ========== 核心修复：手牌居中 ==========
+
+    /**
+     * 渲染手牌，并在布局完成后自动居中
+     */
     private void renderHandCards(List<EventCard> handCards) {
+        Log.d("HAND", "========== renderHandCards CALLED ==========");
         handContainer.removeAllViews();
+
+        if (handCards == null || handCards.isEmpty()) {
+            Log.d("HAND", "手牌为空，不渲染");
+            // 没有卡片时也要居中容器，但无需添加卡片视图
+            centerHandContainer();
+            return;
+        }
+
+        // 添加所有卡片到容器
         for (EventCard card : handCards) {
-            TextView cardView = new TextView(this);
-            cardView.setText(buildCardText(card));
-            cardView.setTextSize(11);
-            cardView.setTextColor(0xFF2B1A12);
-            cardView.setBackgroundResource(R.drawable.bg_card_normal);
-            cardView.setGravity(Gravity.CENTER);
-            cardView.setIncludeFontPadding(false);
-            cardView.setLineSpacing(0, 1.02f);
-            cardView.setPadding(dp(6), dp(4), dp(6), dp(4));
-
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(dp(88), dp(88));
-            params.setMargins(0, 0, 8, 0);
-            cardView.setLayoutParams(params);
-
-            cardView.setOnClickListener(v -> {
-                if (isPlayerTurn) {
-                    toggleCard(cardView, card.getId());
-                }
-            });
+            TextView cardView = createCardView(card);
             handContainer.addView(cardView);
         }
 
-        handContainer.post(() -> {
-            FrameLayout wrapper = (FrameLayout) handContainer.getParent();
-            HorizontalScrollView scrollView = (HorizontalScrollView) wrapper.getParent();
-            wrapper.setMinimumWidth(scrollView.getWidth());
+        // 等待布局完成后居中
+        centerHandContainer();
+    }
+
+    /**
+     * 创建单张卡片的视图
+     */
+    private TextView createCardView(EventCard card) {
+        TextView cardView = new TextView(this);
+        cardView.setText(buildCardText(card));
+        cardView.setTextSize(11);
+        cardView.setTextColor(0xFF2B1A12);
+        cardView.setBackgroundResource(R.drawable.a2);
+        cardView.setGravity(Gravity.CENTER);
+        cardView.setIncludeFontPadding(false);
+        cardView.setLineSpacing(0, 1.02f);
+        cardView.setPadding(dp(6), dp(4), dp(6), dp(4));
+
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(dp(66), dp(88));
+        params.setMargins(0, 0, 8, 0);
+        cardView.setLayoutParams(params);
+
+        applyRoundedCorners(cardView, 8);
+
+        cardView.setOnClickListener(v -> {
+            if (isPlayerTurn) {
+                toggleCard(cardView, card.getId());
+            }
+        });
+
+        return cardView;
+    }
+
+    /**
+     * 居中手牌容器
+     * 每次渲染手牌后调用，通过 post 确保布局完成后再计算宽度
+     */
+    private void centerHandContainer() {
+        // 获取包裹 handContainer 的 FrameLayout
+        final FrameLayout wrapper = (FrameLayout) handContainer.getParent();
+        if (wrapper == null) {
+            Log.d("HAND", "wrapper is null, cannot center");
+            return;
+        }
+
+        // 获取外层的 HorizontalScrollView
+        final HorizontalScrollView scrollView = (HorizontalScrollView) wrapper.getParent();
+        if (scrollView == null) {
+            Log.d("HAND", "scrollView is null, cannot center");
+            return;
+        }
+
+        // 使用 post 确保在布局完成后执行
+        handContainer.post(new Runnable() {
+            @Override
+            public void run() {
+                int scrollWidth = scrollView.getWidth();
+                Log.d("HAND", "centerHandContainer: scrollWidth=" + scrollWidth);
+
+                if (scrollWidth > 0) {
+                    // 计算手牌容器的实际宽度
+                    int totalWidth = 0;
+                    for (int i = 0; i < handContainer.getChildCount(); i++) {
+                        View child = handContainer.getChildAt(i);
+                        if (child.getVisibility() != View.GONE) {
+                            totalWidth += child.getWidth();
+                            if (i > 0) {
+                                // 加上左边距（卡片的 margin）
+                                LinearLayout.LayoutParams params =
+                                        (LinearLayout.LayoutParams) child.getLayoutParams();
+                                totalWidth += params.leftMargin;
+                            }
+                        }
+                    }
+                    Log.d("HAND", "centerHandContainer: totalWidth=" + totalWidth);
+
+                    // 如果总宽度小于 ScrollView 宽度，设置 wrapper 最小宽度为 ScrollView 宽度
+                    if (totalWidth < scrollWidth) {
+                        wrapper.setMinimumWidth(scrollWidth);
+                        Log.d("HAND", "centerHandContainer: setMinimumWidth(" + scrollWidth + ")");
+                    } else {
+                        // 如果总宽度超过 ScrollView，取消最小宽度限制，允许滚动
+                        wrapper.setMinimumWidth(0);
+                        Log.d("HAND", "centerHandContainer: setMinimumWidth(0) - cards exceed width");
+                    }
+                } else {
+                    // 如果 scrollWidth 为 0，延迟重试
+                    Log.d("HAND", "centerHandContainer: scrollWidth=0, retrying...");
+                    handContainer.postDelayed(this, 100);
+                }
+            }
         });
     }
 
-    private String buildCardText(EventCard card) {
+    private CharSequence buildCardText(EventCard card) {
         StringBuilder builder = new StringBuilder(card.getTitle());
         if (card.getEventTime() != null && !card.getEventTime().trim().isEmpty()) {
             builder.append("\n").append(card.getEventTime().trim());
         }
-        if (card.getSummary() != null && !card.getSummary().trim().isEmpty()) {
-            builder.append("\n").append(card.getSummary());
-        }
-        return builder.toString();
+        SpannableString spannable = new SpannableString(builder.toString());
+        spannable.setSpan(new StyleSpan(Typeface.BOLD),
+                0, card.getTitle().length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        return spannable;
     }
 
     private void renderLastRoundCards(NarrativeGameViewData viewData) {
@@ -478,14 +571,15 @@ public class NarrativeGameActivity extends AppCompatActivity {
             cardView.setText(buildCardText(card));
             cardView.setTextSize(9);
             cardView.setTextColor(0xFF2B1A12);
-            cardView.setBackgroundResource(R.drawable.bg_card_played);
+            cardView.setBackgroundResource(R.drawable.a2);
             cardView.setGravity(Gravity.CENTER);
             cardView.setIncludeFontPadding(false);
             cardView.setPadding(dp(3), dp(3), dp(3), dp(3));
 
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(dp(80), dp(66));
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(dp(66), dp(88));
             params.setMargins(0, 0, 6, 0);
             cardView.setLayoutParams(params);
+            applyRoundedCorners(cardView, 8);
             playerPlayedCardsContainer.addView(cardView);
         }
     }
@@ -499,10 +593,10 @@ public class NarrativeGameActivity extends AppCompatActivity {
         }
         if (selectedCardIds.contains(cardId)) {
             selectedCardIds.remove(cardId);
-            cardView.setBackgroundResource(R.drawable.bg_card_normal);
+            cardView.animate().translationY(0).setDuration(100).start();
         } else {
             selectedCardIds.add(cardId);
-            cardView.setBackgroundResource(R.drawable.bg_card_selected);
+            cardView.animate().translationY(dp(-6)).setDuration(100).start();
         }
     }
 
@@ -548,22 +642,91 @@ public class NarrativeGameActivity extends AppCompatActivity {
         btnAbandon.setVisibility(View.GONE);
         isPlayerTurn = false;
 
+        // 立即刷新手牌，移除已打出的牌
+        NarrativeGameViewData freshView = CardGameApplication.getNarrativeActionHandler().getNarrativeGameViewData();
+        renderHandCards(freshView.getHandCards());
+
         // 重置高亮
         tvNameTop.setTextColor(0xFFF6F2E8);
         tvNameLeft.setTextColor(0xFFF6F2E8);
         tvNameRight.setTextColor(0xFFF6F2E8);
         userFactionText.setTextColor(0xFFF6F2E8);
 
-        // 玩家提交已经推进了后端节点，直接渲染新节点
-        // 延迟一小段让玩家看到自己的出牌，然后进入下一节点
+        // 延迟一小段让玩家看到自己的出牌，然后展示剩余AI的牌
         turnHandler.postDelayed(() -> {
             NarrativeGameViewData updated = CardGameApplication.getNarrativeActionHandler().getNarrativeGameViewData();
             if (updated.isGameOver()) {
                 openSettlement();
-            } else {
-                renderGame();
+                return;
             }
+            // 展示当前节点剩余 AI 阵营的牌
+            showRemainingAiCards(updated);
         }, 2000);
+    }
+
+    private void showRemainingAiCards(NarrativeGameViewData viewData) {
+        Log.d("HAND", ">>> showRemainingAiCards");
+        String userFactionId = viewData.getUserFactionId();
+        // 收集当前节点中还没展示的 AI 阵营的牌
+        List<String> aiFactionsToShow = new ArrayList<>();
+        for (String factionId : turnOrder) {
+            if (!factionId.equals(userFactionId) && nodeCardsByFaction.containsKey(factionId)) {
+                aiFactionsToShow.add(factionId);
+            }
+        }
+
+        if (aiFactionsToShow.isEmpty()) {
+            // 没有 AI 需要展示，直接推进到下一节点（不重绘手牌）
+            advanceToNextNode();
+            return;
+        }
+
+        // 逐个展示 AI 的牌，每个间隔 1.5 秒
+        showNextAiCard(0, aiFactionsToShow, viewData);
+    }
+
+    private void showNextAiCard(int index, List<String> aiFactions, NarrativeGameViewData viewData) {
+        if (index >= aiFactions.size()) {
+            // 全部展示完毕，推进到下一节点（不重绘手牌）
+            advanceToNextNode();
+            return;
+        }
+
+        String aiFactionId = aiFactions.get(index);
+        List<EventCard> aiCards = nodeCardsByFaction.get(aiFactionId);
+        if (aiCards != null) {
+            renderAiPlayedCards(viewData, aiFactionId, aiCards);
+        }
+
+        turnHandler.postDelayed(() -> showNextAiCard(index + 1, aiFactions, viewData), 1500);
+    }
+
+    // 推进到下一节点，只更新节点相关 UI，不重绘手牌
+    private void advanceToNextNode() {
+        Log.d("HAND", ">>> advanceToNextNode");
+        NarrativeGameViewData viewData = CardGameApplication.getNarrativeActionHandler().getNarrativeGameViewData();
+        if (viewData == null || viewData.isGameOver()) {
+            openSettlement();
+            return;
+        }
+
+        renderProgressNodes(viewData);
+        renderHearts(viewData.getHearts());
+        stageHintText.setText("阶段提示：" + (viewData.getStageHint() != null ? viewData.getStageHint() : ""));
+        narrationText.setText("旁白：" + (viewData.getOpeningNarration() != null ? viewData.getOpeningNarration() : ""));
+        aiProgressText.setText(formatAiProgress(viewData));
+        aiProgressText.setVisibility(aiProgressText.getText().length() > 0
+                && !aiProgressText.getText().toString().equals("AI 阵营进度：") ? View.VISIBLE : View.GONE);
+        submitButton.setEnabled(!viewData.isGameOver());
+
+        int currentNodeIndex = viewData.getGlobalProgress();
+        if (currentNodeIndex != lastNodeIndex) {
+            initTurnForNode(viewData);
+            lastNodeIndex = currentNodeIndex;
+        }
+
+        selectedCardIds.clear();
+        // 不调用 renderHandCards —— AI 出牌不应影响手牌
     }
 
     private void confirmAbandon() {
@@ -612,35 +775,6 @@ public class NarrativeGameActivity extends AppCompatActivity {
         return builder.toString();
     }
 
-    private String formatLastResolvedNode(NarrativeGameViewData viewData) {
-        if (viewData.getLastResolvedNodeIndex() < 0) {
-            return "等待首次推进";
-        }
-        StringBuilder builder = new StringBuilder();
-        Map<String, List<EventCard>> resolvedEvents = viewData.getLastResolvedNodeEvents();
-        for (Faction faction : viewData.getFactions()) {
-            builder.append(faction.getName());
-            if (faction.getId().equals(viewData.getUserFactionId())) {
-                builder.append("(你)");
-            }
-            builder.append("：");
-
-            List<EventCard> cards = resolvedEvents.get(faction.getId());
-            if (cards == null || cards.isEmpty()) {
-                builder.append("空\n");
-            } else {
-                for (int i = 0; i < cards.size(); i++) {
-                    if (i > 0) {
-                        builder.append("、");
-                    }
-                    builder.append(cards.get(i).getTitle());
-                }
-                builder.append("\n");
-            }
-        }
-        return builder.toString().trim();
-    }
-
     private String findFactionName(NarrativeGameViewData viewData, String factionId) {
         for (Faction faction : viewData.getFactions()) {
             if (faction.getId().equals(factionId)) {
@@ -652,6 +786,17 @@ public class NarrativeGameActivity extends AppCompatActivity {
 
     private int dp(int value) {
         return (int) (value * getResources().getDisplayMetrics().density);
+    }
+
+    private void applyRoundedCorners(View view, int radiusDp) {
+        view.setClipToOutline(true);
+        final int radius = dp(radiusDp);
+        view.setOutlineProvider(new ViewOutlineProvider() {
+            @Override
+            public void getOutline(View v, Outline outline) {
+                outline.setRoundRect(0, 0, v.getWidth(), v.getHeight(), radius);
+            }
+        });
     }
 
     @Override
@@ -669,10 +814,10 @@ public class NarrativeGameActivity extends AppCompatActivity {
     private void hideSystemUI() {
         getWindow().getDecorView().setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_FULLSCREEN);
+                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN);
     }
 }
