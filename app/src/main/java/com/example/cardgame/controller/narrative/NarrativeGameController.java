@@ -34,10 +34,13 @@ public class NarrativeGameController implements NarrativeActionHandler {
 
     @Override
     public ParseResult parseText(String rawText) {
-        this.gameId = UUID.randomUUID().toString();
-        this.currentRawText = rawText;
-        this.currentParseResult = textParser.parse(rawText);
-        return currentParseResult;
+        ParseResult parseResult = textParser.parse(rawText);
+        if (parseResult.isSuccess() || currentParseResult == null) {
+            this.gameId = UUID.randomUUID().toString();
+            this.currentRawText = rawText;
+            this.currentParseResult = parseResult;
+        }
+        return parseResult;
     }
 
     @Override

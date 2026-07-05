@@ -18,6 +18,10 @@ public class PreviewViewData {
     private String rawText;
     private int totalNodes;
     private boolean fallbackUsed;
+    private String parseStatus = ParseResult.STATUS_SUCCESS;
+    private String parseMessage = "";
+    private boolean retryAllowed = true;
+    private boolean requiresTextEdit;
 
     public String getGameId() {
         return gameId;
@@ -83,5 +87,37 @@ public class PreviewViewData {
 
     public void setFallbackUsed(boolean fallbackUsed) {
         this.fallbackUsed = fallbackUsed;
+    }
+
+    public String getParseStatus() {
+        return parseStatus;
+    }
+
+    public void setParseStatus(String parseStatus) {
+        this.parseStatus = parseStatus != null ? parseStatus : ParseResult.STATUS_SUCCESS;
+    }
+
+    public String getParseMessage() {
+        return parseMessage;
+    }
+
+    public void setParseMessage(String parseMessage) {
+        this.parseMessage = parseMessage != null ? parseMessage : "";
+    }
+
+    public boolean isRetryAllowed() {
+        return retryAllowed;
+    }
+
+    public void setRetryAllowed(boolean retryAllowed) {
+        this.retryAllowed = retryAllowed;
+    }
+
+    public boolean isRequiresTextEdit() {
+        return requiresTextEdit;
+    }
+
+    public void setRequiresTextEdit(boolean requiresTextEdit) {
+        this.requiresTextEdit = requiresTextEdit;
     }
 }
