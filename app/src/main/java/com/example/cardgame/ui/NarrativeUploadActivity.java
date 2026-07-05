@@ -16,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.cardgame.CardGameApplication;
 import com.example.cardgame.R;
+import com.example.cardgame.dto.narrative.ParseResult;
 
 public class NarrativeUploadActivity extends AppCompatActivity {
     private static final int MAX_TEXT_LENGTH = 5000;
@@ -86,14 +87,57 @@ public class NarrativeUploadActivity extends AppCompatActivity {
         parseButton.setText("解析中...");
         updatePreviewButton(false);
         new Thread(() -> {
-            CardGameApplication.getNarrativeActionHandler().parseText(rawText);
+            ParseResult result = CardGameApplication.getNarrativeActionHandler().parseText(rawText);
             runOnUiThread(() -> {
                 parseButton.setEnabled(true);
                 parseButton.setText("开始解析");
-                updatePreviewButton(true);
-                Toast.makeText(this, "解析完成，可进入结果预览", Toast.LENGTH_SHORT).show();
+                handleParseResult(result);
             });
         }).start();
+    }
+
+    private void handleParseResult(ParseResult result) {
+        if (result == null) {
+            showErrorDialog("解析异常，请重试", false);
+            return;
+        }
+
+        switch (result.getParseStatus()) {
+            case ParseResult.STATUS_SUCCESS:
+                updatePreviewButton(true);
+                Toast.makeText(this, "解析成功，查看预览结果", Toast.LENGTH_SHORT).show();
+                break;
+
+            case ParseResult.STATUS_FACTION_COUNT_INVALID:
+                showErrorDialog("当前文本只提取到一个阵营或者缺少明确阵营对立关系，请换一个文本试试吧", true);
+                break;
+
+            case ParseResult.STATUS_PARSE_ERROR:
+                showErrorDialog("解析异常，请重试", false);
+                break;
+
+            case ParseResult.STATUS_MISSING_ACTION:
+                showErrorDialog("有一方阵营没有具体行动，请补充后重试", true);
+                break;
+
+            default:
+                showErrorDialog("解析异常，请重试", false);
+                break;
+        }
+    }
+
+    private void showErrorDialog(String message, boolean clearText) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this)
+                .setTitle("提示")
+                .setMessage(message)
+                .setPositiveButton("知道了", (dialog, which) -> {
+                    dialog.dismiss();
+                    if (clearText) {
+                        inputText.setText("");
+                    }
+                })
+                .setCancelable(false);
+        builder.show();
     }
 
     private void openPreview() {

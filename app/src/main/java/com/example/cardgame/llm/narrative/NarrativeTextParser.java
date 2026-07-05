@@ -47,18 +47,22 @@ public class NarrativeTextParser {
             if (result.isFallbackUsed()) {
                 Log.e(TAG, "=== 解析失败，使用 Fallback 数据 ===");
                 Log.e(TAG, "Fallback data: 安史之乱预设数据");
+                result.setParseStatus(ParseResult.STATUS_PARSE_ERROR);
             } else {
                 Log.i(TAG, "=== 解析成功 ===");
                 Log.i(TAG, "Factions count: " + (result.getFactions() != null ? result.getFactions().size() : 0));
                 Log.i(TAG, "Cards count: " + (result.getCards() != null ? result.getCards().size() : 0));
                 Log.i(TAG, "Nodes count: " + (result.getNodes() != null ? result.getNodes().size() : 0));
+                result.setParseStatus(ParseResult.STATUS_SUCCESS);
             }
             return result;
         } catch (Exception e) {
             Log.e(TAG, "=== 解析失败，使用 Fallback 数据 ===");
             Log.e(TAG, "Exception: " + e.getMessage(), e);
             Log.e(TAG, "Fallback data: 安史之乱预设数据");
-            return fallbackDataProvider.getFallbackData();
+            ParseResult fallback = fallbackDataProvider.getFallbackData();
+            fallback.setParseStatus(ParseResult.STATUS_PARSE_ERROR);
+            return fallback;
         }
     }
 
@@ -76,44 +80,71 @@ public class NarrativeTextParser {
             parseResult = gson.fromJson(jsonObject, ParseResult.class);
         } catch (Exception e) {
             Log.e(TAG, "First attempt failed: " + e.getMessage(), e);
-            throw e;
-        }
-
-        if (parseValidator.isValid(parseResult)) {
-            Log.d(TAG, "First parse attempt valid, normalizing data");
-            parseValidator.normalize(parseResult);
-            return parseResult;
-        }
-
-        Log.w(TAG, "First parse attempt invalid: " + parseValidator.getInvalidReason(parseResult));
-        Log.w(TAG, "Retrying with temperature " + RETRY_TEMPERATURE + "...");
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException ie) {
-            Thread.currentThread().interrupt();
-        }
-
-        Log.d(TAG, "Second attempt with temperature " + RETRY_TEMPERATURE);
-        content = llmClient.chat(promptBuilder.buildMessages(sanitizedText), RETRY_TEMPERATURE);
-        Log.d(TAG, "Raw LLM response (retry) length: " + (content != null ? content.length() : 0));
-
-        try {
-            String jsonObject = extractJsonObject(content);
-            jsonObject = cleanJsonPunctuation(jsonObject);
-            parseResult = gson.fromJson(jsonObject, ParseResult.class);
-        } catch (Exception e) {
-            Log.e(TAG, "Second attempt failed: " + e.getMessage(), e);
-            return fallbackDataProvider.getFallbackData();
+            ParseResult fallback = fallbackDataProvider.getFallbackData();
+            fallback.setParseStatus(ParseResult.STATUS_PARSE_ERROR);
+            return fallback;
         }
 
         String invalidReason = parseValidator.getInvalidReason(parseResult);
         if (invalidReason != null) {
-            Log.e(TAG, "Second parse attempt invalid, using fallback: " + invalidReason);
-            return fallbackDataProvider.getFallbackData();
+            Log.w(TAG, "First parse attempt invalid: " + invalidReason);
+
+            if (isFactionCountIssue(invalidReason)) {
+                Log.e(TAG, "阵营数量不符合要求，直接返回错误");
+                parseResult.setParseStatus(ParseResult.STATUS_FACTION_COUNT_INVALID);
+                parseResult.setErrorMessage(invalidReason);
+                parseResult.setFallbackUsed(false);
+                return parseResult;
+            }
+
+            Log.w(TAG, "Retrying with temperature " + RETRY_TEMPERATURE + "...");
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+            }
+
+            Log.d(TAG, "Second attempt with temperature " + RETRY_TEMPERATURE);
+            content = llmClient.chat(promptBuilder.buildMessages(sanitizedText), RETRY_TEMPERATURE);
+            Log.d(TAG, "Raw LLM response (retry) length: " + (content != null ? content.length() : 0));
+
+            try {
+                String jsonObject = extractJsonObject(content);
+                jsonObject = cleanJsonPunctuation(jsonObject);
+                parseResult = gson.fromJson(jsonObject, ParseResult.class);
+            } catch (Exception e) {
+                Log.e(TAG, "Second attempt failed: " + e.getMessage(), e);
+                ParseResult fallback = fallbackDataProvider.getFallbackData();
+                fallback.setParseStatus(ParseResult.STATUS_PARSE_ERROR);
+                return fallback;
+            }
+
+            String retryInvalidReason = parseValidator.getInvalidReason(parseResult);
+            if (retryInvalidReason != null) {
+                Log.e(TAG, "Second parse attempt invalid: " + retryInvalidReason);
+                parseResult.setParseStatus(ParseResult.STATUS_MISSING_ACTION);
+                parseResult.setErrorMessage(retryInvalidReason);
+                parseResult.setFallbackUsed(false);
+                return parseResult;
+            }
+            Log.d(TAG, "Second parse attempt valid, normalizing data");
+            parseValidator.normalize(parseResult);
+            parseResult.setParseStatus(ParseResult.STATUS_SUCCESS);
+            return parseResult;
         }
-        Log.d(TAG, "Second parse attempt valid, normalizing data");
+
+        Log.d(TAG, "First parse attempt valid, normalizing data");
         parseValidator.normalize(parseResult);
+        parseResult.setParseStatus(ParseResult.STATUS_SUCCESS);
         return parseResult;
+    }
+
+    private boolean isFactionCountIssue(String invalidReason) {
+        return invalidReason != null && (
+                invalidReason.contains("less than 2 factions")
+                        || invalidReason.contains("missing required fields")
+                        || invalidReason.contains("empty factions")
+        );
     }
 
     private String sanitizeText(String rawText) throws IOException {

@@ -8,11 +8,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ParseResult {
+
+    public static final String STATUS_SUCCESS = "SUCCESS";
+    public static final String STATUS_FACTION_COUNT_INVALID = "FACTION_COUNT_INVALID";
+    public static final String STATUS_PARSE_ERROR = "PARSE_ERROR";
+    public static final String STATUS_MISSING_ACTION = "MISSING_ACTION";
+
     private List<Faction> factions = new ArrayList<>();
     private List<EventCard> cards = new ArrayList<>();
     private List<NarrativeNode> nodes = new ArrayList<>();
     private int totalNodes;
     private boolean fallbackUsed;
+    private String parseStatus = STATUS_SUCCESS;
+    private String errorMessage;
 
     public ParseResult() {
     }
@@ -64,5 +72,25 @@ public class ParseResult {
 
     public void setFallbackUsed(boolean fallbackUsed) {
         this.fallbackUsed = fallbackUsed;
+    }
+
+    public String getParseStatus() {
+        return parseStatus;
+    }
+
+    public void setParseStatus(String parseStatus) {
+        this.parseStatus = parseStatus;
+    }
+
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
+    }
+
+    public boolean isSuccess() {
+        return STATUS_SUCCESS.equals(parseStatus);
     }
 }
