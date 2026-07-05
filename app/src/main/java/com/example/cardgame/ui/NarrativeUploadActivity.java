@@ -20,7 +20,7 @@ import com.example.cardgame.dto.narrative.ParseResult;
 
 public class NarrativeUploadActivity extends AppCompatActivity {
     private static final int MAX_TEXT_LENGTH = 5000;
-    private static final String SAMPLE_TEXT = "安史之乱是唐朝由盛转衰的重要事件。边镇节度使权力集中，安禄山势力坐大，并在范阳起兵反唐。叛乱迅速扩大，唐廷仓促组织平叛，百姓遭受战乱。局势经历逃亡、兵变、反攻与重建，最终留下藩镇坐大和社会创伤。";
+    private static final String SAMPLE_TEXT = "18世纪中叶，阿拉伯半岛兴起了瓦哈比运动。该运动由宗教改革家穆罕默德·本·阿卜杜勒·瓦哈卜于1740年代发起，旨在回归早期伊斯兰教的严格教义，反对当时奥斯曼帝国统治下流行的苏菲主义习俗和圣墓崇拜。瓦哈卜与当地统治者穆罕默德·本·沙特结盟，形成了以德拉伊耶为中心的政教合一势力，与奉行传统伊斯兰实践的奥斯曼帝国及其地方代理人形成直接对立。1802年，沙特-瓦哈比联军攻占什叶派圣城卡尔巴拉，劫掠了侯赛因清真寺，这一事件震惊了整个伊斯兰世界，标志着运动从宗教改革转向了军事扩张，与奥斯曼帝国的冲突全面激化。奥斯曼苏丹马哈茂德二世遂命令埃及总督穆罕默德·阿里出兵平乱。经过数年战争，埃及军队于1818年攻陷德拉伊耶，摧毁了第一沙特王国。这场运动虽暂时被镇压，但其宗教思想深刻影响了阿拉伯半岛，为日后沙特阿拉伯的复国与立国奠定了意识形态基础。";
 
     private EditText inputText;
     private Button parseButton;
