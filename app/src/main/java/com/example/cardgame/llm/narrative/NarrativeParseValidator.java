@@ -58,6 +58,14 @@ public class NarrativeParseValidator {
         if (cardsById.size() != parseResult.getCards().size()) {
             return "blank, duplicate, or unknown factionId in cards";
         }
+        for (EventCard card : parseResult.getCards()) {
+            if (isBlank(card.getEventTime())) {
+                return "card missing eventTime";
+            }
+            if (!isValidEventTime(card.getEventTime())) {
+                return "card invalid eventTime";
+            }
+        }
         for (int i = 0; i < parseResult.getNodes().size(); i++) {
             NarrativeNode node = parseResult.getNodes().get(i);
             if (node == null || node.getNodeIndex() != i) {
@@ -236,6 +244,26 @@ public class NarrativeParseValidator {
 
     private boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
+    }
+
+    private boolean isValidEventTime(String value) {
+        String eventTime = trimToEmpty(value);
+        if (isBlank(eventTime)) {
+            return false;
+        }
+        if ("\u65f6\u95f4\u4e0d\u8be6".equals(eventTime)) {
+            return true;
+        }
+        if (eventTime.length() > 12) {
+            return false;
+        }
+        if (eventTime.matches(".*[0-9\u96f6\u4e00\u4e8c\u4e09\u56db\u4e94\u516d\u4e03\u516b\u4e5d\u5341]+.*[\u5e74\u6708\u65e5\u4e16\u7eaa\u4ee3].*")) {
+            return true;
+        }
+        if (eventTime.matches(".*(\u65f6\u671f|\u65f6\u4ee3|\u671d|\u4ee3|\u6625\u79cb|\u6218\u56fd|\u6c11\u56fd).*")) {
+            return true;
+        }
+        return eventTime.matches(".*(\u6e05\u672b|\u5510\u521d|\u660e\u672b|\u6c49\u672b|\u5b8b\u672b|\u6218\u524d|\u6218\u540e|\u4e4b\u524d|\u4e4b\u540e|\u968f\u540e|\u6b64\u540e|\u540c\u5e74|\u6b21\u5e74|\u5f53\u5e74|\u5e74\u521d|\u5e74\u672b|\u521d\u671f|\u4e2d\u671f|\u540e\u671f|\u672b\u671f).*");
     }
 
     private boolean isSameText(String left, String right) {

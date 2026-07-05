@@ -210,6 +210,7 @@ public class NarrativeTextParser {
         }
         return invalidReason.contains("duplicate")
                 || invalidReason.contains("missing")
+                || invalidReason.contains("invalid eventTime")
                 || invalidReason.contains("nodeIndex")
                 || invalidReason.contains("totalNodes")
                 || invalidReason.contains("invalid node");
