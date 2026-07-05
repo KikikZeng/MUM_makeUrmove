@@ -21,6 +21,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.cardgame.CardGameApplication;
 import com.example.cardgame.R;
+import com.example.cardgame.dto.narrative.ParseResult;
 import com.example.cardgame.dto.narrative.PreviewViewData;
 import com.example.cardgame.model.narrative.EventCard;
 import com.example.cardgame.model.narrative.Faction;
@@ -216,9 +217,22 @@ public class NarrativePreviewActivity extends AppCompatActivity {
         reparseButton.setEnabled(false);
         reparseButton.setText("解析中...");
         new Thread(() -> {
-            CardGameApplication.getNarrativeActionHandler().parseText(text);
+            ParseResult result = CardGameApplication.getNarrativeActionHandler().parseText(text);
             runOnUiThread(() -> {
                 reparseButton.setText("重新解析");
+                handleReparseResult(result);
+            });
+        }).start();
+    }
+
+    private void handleReparseResult(ParseResult result) {
+        if (result == null) {
+            showParseErrorDialog("解析异常，请重试");
+            updateReparseButton();
+            return;
+        }
+        switch (result.getParseStatus()) {
+            case ParseResult.STATUS_SUCCESS:
                 sourceExpanded = true;
                 handExpanded = false;
                 timelineExpanded = false;
@@ -226,8 +240,29 @@ public class NarrativePreviewActivity extends AppCompatActivity {
                 timelineContainer.setVisibility(View.GONE);
                 renderPreview();
                 Toast.makeText(this, "已基于修改文本重新解析", Toast.LENGTH_SHORT).show();
-            });
-        }).start();
+                break;
+            case ParseResult.STATUS_FACTION_COUNT_INVALID:
+                showParseErrorDialog("当前文本只提取到一个阵营或者缺少明确阵营对立关系，请换一个文本试试吧");
+                updateReparseButton();
+                break;
+            case ParseResult.STATUS_MISSING_ACTION:
+                showParseErrorDialog("有一方阵营没有具体行动，请补充后重试");
+                updateReparseButton();
+                break;
+            case ParseResult.STATUS_PARSE_ERROR:
+            default:
+                showParseErrorDialog("解析异常，请重试");
+                updateReparseButton();
+                break;
+        }
+    }
+
+    private void showParseErrorDialog(String message) {
+        new AlertDialog.Builder(this)
+                .setTitle("提示")
+                .setMessage(message)
+                .setPositiveButton("知道了", (dialog, which) -> dialog.dismiss())
+                .show();
     }
 
     private void updateReparseButton() {
