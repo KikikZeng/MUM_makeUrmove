@@ -64,18 +64,22 @@ public class NarrativeTextParser {
             if (result.isFallbackUsed()) {
                 Log.e(TAG, "=== 解析失败，使用 Fallback 数据 ===");
                 Log.e(TAG, "Fallback data: 安史之乱预设数据");
+                result.setParseStatus(ParseResult.STATUS_PARSE_ERROR);
             } else {
                 Log.i(TAG, "=== 解析成功 ===");
                 Log.i(TAG, "Factions count: " + (result.getFactions() != null ? result.getFactions().size() : 0));
                 Log.i(TAG, "Cards count: " + (result.getCards() != null ? result.getCards().size() : 0));
                 Log.i(TAG, "Nodes count: " + (result.getNodes() != null ? result.getNodes().size() : 0));
+                result.setParseStatus(ParseResult.STATUS_SUCCESS);
             }
             return result;
         } catch (Exception e) {
             Log.e(TAG, "=== 解析失败，使用 Fallback 数据 ===");
             Log.e(TAG, "Exception: " + e.getMessage(), e);
             Log.e(TAG, "Fallback data: 安史之乱预设数据");
-            return fallbackResult("模型调用失败，已使用演示兜底数据：" + e.getMessage());
+            ParseResult fallback = fallbackDataProvider.getFallbackData();
+            fallback.setParseStatus(ParseResult.STATUS_PARSE_ERROR);
+            return fallback;
         }
     }
 
@@ -146,106 +150,72 @@ public class NarrativeTextParser {
             Log.d(TAG, "Extracted JSON length: " + jsonObject.length());
             return ParseAttempt.success(gson.fromJson(jsonObject, ParseResult.class));
         } catch (Exception e) {
-            Log.e(TAG, "Parse attempt failed: " + e.getMessage(), e);
-            return ParseAttempt.formatError(e.getMessage());
+            Log.e(TAG, "First attempt failed: " + e.getMessage(), e);
+            ParseResult fallback = fallbackDataProvider.getFallbackData();
+            fallback.setParseStatus(ParseResult.STATUS_PARSE_ERROR);
+            return fallback;
         }
-    }
 
-    private void validateRootFields(String jsonObject) throws IOException {
-        try {
-            JSONObject data = new JSONObject(jsonObject);
-            String[] requiredFields = {"factions", "cards", "nodes", "totalNodes", "fallbackUsed"};
-            for (String field : requiredFields) {
-                if (!data.has(field)) {
-                    throw new IOException("missing root field: " + field);
-                }
+        String invalidReason = parseValidator.getInvalidReason(parseResult);
+        if (invalidReason != null) {
+            Log.w(TAG, "First parse attempt invalid: " + invalidReason);
+
+            if (isFactionCountIssue(invalidReason)) {
+                Log.e(TAG, "阵营数量不符合要求，直接返回错误");
+                parseResult.setParseStatus(ParseResult.STATUS_FACTION_COUNT_INVALID);
+                parseResult.setErrorMessage(invalidReason);
+                parseResult.setFallbackUsed(false);
+                return parseResult;
             }
-        } catch (JSONException e) {
-            throw new IOException("invalid JSON object: " + e.getMessage(), e);
-        }
-    }
 
-    private ParseResult successResult(ParseResult parseResult) {
-        Log.d(TAG, "Parse attempt valid, normalizing data");
+            Log.w(TAG, "Retrying with temperature " + RETRY_TEMPERATURE + "...");
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+            }
+
+            Log.d(TAG, "Second attempt with temperature " + RETRY_TEMPERATURE);
+            content = llmClient.chat(promptBuilder.buildMessages(sanitizedText), RETRY_TEMPERATURE);
+            Log.d(TAG, "Raw LLM response (retry) length: " + (content != null ? content.length() : 0));
+
+            try {
+                String jsonObject = extractJsonObject(content);
+                jsonObject = cleanJsonPunctuation(jsonObject);
+                parseResult = gson.fromJson(jsonObject, ParseResult.class);
+            } catch (Exception e) {
+                Log.e(TAG, "Second attempt failed: " + e.getMessage(), e);
+                ParseResult fallback = fallbackDataProvider.getFallbackData();
+                fallback.setParseStatus(ParseResult.STATUS_PARSE_ERROR);
+                return fallback;
+            }
+
+            String retryInvalidReason = parseValidator.getInvalidReason(parseResult);
+            if (retryInvalidReason != null) {
+                Log.e(TAG, "Second parse attempt invalid: " + retryInvalidReason);
+                parseResult.setParseStatus(ParseResult.STATUS_MISSING_ACTION);
+                parseResult.setErrorMessage(retryInvalidReason);
+                parseResult.setFallbackUsed(false);
+                return parseResult;
+            }
+            Log.d(TAG, "Second parse attempt valid, normalizing data");
+            parseValidator.normalize(parseResult);
+            parseResult.setParseStatus(ParseResult.STATUS_SUCCESS);
+            return parseResult;
+        }
+
+        Log.d(TAG, "First parse attempt valid, normalizing data");
         parseValidator.normalize(parseResult);
         parseResult.setParseStatus(ParseResult.STATUS_SUCCESS);
-        parseResult.setParseMessage("解析成功");
-        parseResult.setRetryAllowed(true);
-        parseResult.setRequiresTextEdit(false);
         return parseResult;
     }
 
-    private ParseResult validationFailure(String invalidReason) {
-        if (invalidReason != null && invalidReason.contains("has no assigned cards")) {
-            return missingActionResult("文件存在多阵营，但其中一方缺少行动，建议补充内容后重试");
-        }
-        if (invalidReason != null && invalidReason.contains("less than 2 factions")) {
-            return failureResult(ParseResult.STATUS_FACTION_COUNT_INVALID,
-                    "文本只提到一个阵营或缺少明确阵营对立关系",
-                    false,
-                    true);
-        }
-        return parseErrorResult("解析结果未通过业务校验：" + invalidReason);
-    }
-
-    private ParseResult parseErrorResult(String message) {
-        return failureResult(ParseResult.STATUS_PARSE_ERROR, message, true, false);
-    }
-
-    private ParseResult missingActionResult(String message) {
-        return failureResult(ParseResult.STATUS_MISSING_ACTION, message, false, true);
-    }
-
-    private boolean shouldRetryValidationError(String invalidReason) {
-        if (invalidReason == null) {
-            return false;
-        }
-        if (invalidReason.contains("has no assigned cards")
-                || invalidReason.contains("less than 2 factions")) {
-            return false;
-        }
-        return invalidReason.contains("duplicate")
-                || invalidReason.contains("missing")
-                || invalidReason.contains("nodeIndex")
-                || invalidReason.contains("totalNodes")
-                || invalidReason.contains("invalid node");
-    }
-
-    private boolean isEmptyModelOutput(ParseResult parseResult) {
-        return parseResult != null
-                && parseResult.isFallbackUsed()
-                && parseResult.getFactions().isEmpty()
-                && parseResult.getCards().isEmpty()
-                && parseResult.getNodes().isEmpty();
-    }
-
-    private ParseResult failureResult(String status, String message,
-                                      boolean retryAllowed, boolean requiresTextEdit) {
-        ParseResult result = new ParseResult();
-        result.setParseStatus(status);
-        result.setParseMessage(message);
-        result.setFallbackUsed(false);
-        result.setRetryAllowed(retryAllowed);
-        result.setRequiresTextEdit(requiresTextEdit);
-        result.setTotalNodes(0);
-        return result;
-    }
-
-    private ParseResult fallbackResult(String message) {
-        ParseResult result = fallbackDataProvider.getFallbackData();
-        result.setParseStatus(ParseResult.STATUS_PARSE_ERROR);
-        result.setParseMessage(message);
-        result.setRetryAllowed(true);
-        result.setRequiresTextEdit(false);
-        return result;
-    }
-
-    private void sleepBeforeRetry() {
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException ie) {
-            Thread.currentThread().interrupt();
-        }
+    private boolean isFactionCountIssue(String invalidReason) {
+        return invalidReason != null && (
+                invalidReason.contains("less than 2 factions")
+                        || invalidReason.contains("missing required fields")
+                        || invalidReason.contains("empty factions")
+        );
     }
 
     private String sanitizeText(String rawText) throws IOException {
@@ -321,27 +291,5 @@ public class NarrativeTextParser {
             Log.d(TAG, "JSON punctuation cleaned (full-width -> half-width outside strings)");
         }
         return cleaned;
-    }
-
-    private static class ParseAttempt {
-        private final ParseResult parseResult;
-        private final String errorMessage;
-
-        private ParseAttempt(ParseResult parseResult, String errorMessage) {
-            this.parseResult = parseResult;
-            this.errorMessage = errorMessage;
-        }
-
-        static ParseAttempt success(ParseResult parseResult) {
-            return new ParseAttempt(parseResult, null);
-        }
-
-        static ParseAttempt formatError(String errorMessage) {
-            return new ParseAttempt(null, errorMessage);
-        }
-
-        boolean hasFormatError() {
-            return errorMessage != null;
-        }
     }
 }

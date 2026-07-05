@@ -8,10 +8,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ParseResult {
-    public static final String STATUS_SUCCESS = "STATUS_SUCCESS";
-    public static final String STATUS_FACTION_COUNT_INVALID = "STATUS_FACTION_COUNT_INVALID";
-    public static final String STATUS_PARSE_ERROR = "STATUS_PARSE_ERROR";
-    public static final String STATUS_MISSING_ACTION = "STATUS_MISSING_ACTION";
+
+    public static final String STATUS_SUCCESS = "SUCCESS";
+    public static final String STATUS_FACTION_COUNT_INVALID = "FACTION_COUNT_INVALID";
+    public static final String STATUS_PARSE_ERROR = "PARSE_ERROR";
+    public static final String STATUS_MISSING_ACTION = "MISSING_ACTION";
 
     private List<Faction> factions = new ArrayList<>();
     private List<EventCard> cards = new ArrayList<>();
@@ -19,9 +20,7 @@ public class ParseResult {
     private int totalNodes;
     private boolean fallbackUsed;
     private String parseStatus = STATUS_SUCCESS;
-    private String parseMessage = "";
-    private boolean retryAllowed = true;
-    private boolean requiresTextEdit;
+    private String errorMessage;
 
     public ParseResult() {
     }
@@ -81,30 +80,18 @@ public class ParseResult {
     }
 
     public void setParseStatus(String parseStatus) {
-        this.parseStatus = parseStatus != null ? parseStatus : STATUS_SUCCESS;
+        this.parseStatus = parseStatus;
     }
 
-    public String getParseMessage() {
-        return parseMessage;
+    public String getErrorMessage() {
+        return errorMessage;
     }
 
-    public void setParseMessage(String parseMessage) {
-        this.parseMessage = parseMessage != null ? parseMessage : "";
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
     }
 
-    public boolean isRetryAllowed() {
-        return retryAllowed;
-    }
-
-    public void setRetryAllowed(boolean retryAllowed) {
-        this.retryAllowed = retryAllowed;
-    }
-
-    public boolean isRequiresTextEdit() {
-        return requiresTextEdit;
-    }
-
-    public void setRequiresTextEdit(boolean requiresTextEdit) {
-        this.requiresTextEdit = requiresTextEdit;
+    public boolean isSuccess() {
+        return STATUS_SUCCESS.equals(parseStatus);
     }
 }
