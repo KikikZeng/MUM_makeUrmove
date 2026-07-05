@@ -336,7 +336,7 @@ public class NarrativePreviewActivity extends AppCompatActivity {
 
     private View createEventCardView(EventCard card, String factionName) {
         TextView cardView = new TextView(this);
-        cardView.setText(card.getTitle() + "\n" + card.getSourceHint() + "\n" + factionName);
+        cardView.setText(card.getTitle() + "\n" + displayEventTime(card) + "\n" + factionName);
         cardView.setTextSize(12);
         cardView.setTextColor(0xFF2B1A12);
         cardView.setGravity(Gravity.CENTER);
@@ -388,6 +388,13 @@ public class NarrativePreviewActivity extends AppCompatActivity {
             }
         }
         return factionId;
+    }
+
+    private String displayEventTime(EventCard card) {
+        String eventTime = card.getEventTime();
+        return eventTime != null && !eventTime.trim().isEmpty()
+                ? eventTime.trim()
+                : "时间不详";
     }
 
     private String estimatePlayTime(int nodes) {

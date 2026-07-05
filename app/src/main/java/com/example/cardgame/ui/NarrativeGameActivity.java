@@ -452,8 +452,8 @@ public class NarrativeGameActivity extends AppCompatActivity {
 
     private String buildCardText(EventCard card) {
         StringBuilder builder = new StringBuilder(card.getTitle());
-        if (card.getSourceHint() != null && !card.getSourceHint().trim().isEmpty()) {
-            builder.append("\n").append(card.getSourceHint());
+        if (card.getEventTime() != null && !card.getEventTime().trim().isEmpty()) {
+            builder.append("\n").append(card.getEventTime().trim());
         }
         if (card.getSummary() != null && !card.getSummary().trim().isEmpty()) {
             builder.append("\n").append(card.getSummary());

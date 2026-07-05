@@ -22,21 +22,21 @@ public class FallbackNarrativeDataProvider {
         );
 
         List<EventCard> cards = Arrays.asList(
-                new EventCard("t1", "tang", "边镇失衡", "朝廷倚重节度使", "安史之乱背景"),
-                new EventCard("r1", "rebel", "势力坐大", "安禄山兼领重镇", "安史之乱背景"),
-                new EventCard("r2", "rebel", "范阳起兵", "安禄山起兵反唐", "叛乱爆发"),
-                new EventCard("l1", "local", "地方观望", "地方势力观望局势", "叛乱爆发"),
-                new EventCard("t2", "tang", "仓促应对", "唐廷组织平叛", "战局扩大"),
-                new EventCard("r3", "rebel", "攻陷两京", "叛军威胁中枢", "战局扩大"),
-                new EventCard("p1", "people", "流离失所", "百姓遭受战乱", "战局扩大"),
-                new EventCard("t3", "tang", "马嵬兵变", "逃亡途中军心激变", "局势转折"),
-                new EventCard("p2", "people", "民生凋敝", "战乱加重民困", "局势转折"),
-                new EventCard("t4", "tang", "收复两京", "唐军逐步反攻", "平叛推进"),
-                new EventCard("r4", "rebel", "内部分裂", "叛军阵营分化", "平叛推进"),
-                new EventCard("l2", "local", "协助平叛", "部分藩镇转向朝廷", "平叛推进"),
-                new EventCard("t5", "tang", "重建秩序", "朝廷恢复统治", "乱后重建"),
-                new EventCard("l3", "local", "藩镇坐大", "地方权力继续扩大", "乱后重建"),
-                new EventCard("p3", "people", "社会创伤", "人口经济受重创", "乱后重建")
+                new EventCard("t1", "tang", "边镇失衡", "朝廷倚重节度使", "755年前", "安史之乱背景"),
+                new EventCard("r1", "rebel", "势力坐大", "安禄山兼领重镇", "755年前", "安史之乱背景"),
+                new EventCard("r2", "rebel", "范阳起兵", "安禄山起兵反唐", "755年", "叛乱爆发"),
+                new EventCard("l1", "local", "地方观望", "地方势力观望局势", "755年", "叛乱爆发"),
+                new EventCard("t2", "tang", "仓促应对", "唐廷组织平叛", "756年", "战局扩大"),
+                new EventCard("r3", "rebel", "攻陷两京", "叛军威胁中枢", "756年", "战局扩大"),
+                new EventCard("p1", "people", "流离失所", "百姓遭受战乱", "756年", "战局扩大"),
+                new EventCard("t3", "tang", "马嵬兵变", "逃亡途中军心激变", "756年", "局势转折"),
+                new EventCard("p2", "people", "民生凋敝", "战乱加重民困", "756年后", "局势转折"),
+                new EventCard("t4", "tang", "收复两京", "唐军逐步反攻", "757年", "平叛推进"),
+                new EventCard("r4", "rebel", "内部分裂", "叛军阵营分化", "757年后", "平叛推进"),
+                new EventCard("l2", "local", "协助平叛", "部分藩镇转向朝廷", "757年后", "平叛推进"),
+                new EventCard("t5", "tang", "重建秩序", "朝廷恢复统治", "763年后", "乱后重建"),
+                new EventCard("l3", "local", "藩镇坐大", "地方权力继续扩大", "763年后", "乱后重建"),
+                new EventCard("p3", "people", "社会创伤", "人口经济受重创", "763年后", "乱后重建")
         );
 
         List<NarrativeNode> nodes = Arrays.asList(

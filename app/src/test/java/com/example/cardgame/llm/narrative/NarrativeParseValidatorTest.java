@@ -84,6 +84,26 @@ public class NarrativeParseValidatorTest {
     }
 
     @Test
+    public void validateOrFallback_returnsFallbackWhenCardEventTimeIsBlank() {
+        ParseResult parseResult = validParseResultWithMissingFactionEntry();
+        parseResult.getCards().get(0).setEventTime("");
+
+        ParseResult result = validator.validateOrFallback(parseResult);
+
+        assertTrue(result.isFallbackUsed());
+    }
+
+    @Test
+    public void validateOrFallback_returnsFallbackWhenCardEventTimeIsNotTimeLike() {
+        ParseResult parseResult = validParseResultWithMissingFactionEntry();
+        parseResult.getCards().get(0).setEventTime("\u5fb7\u62c9\u4f0a\u8036\u4e2d\u5fc3");
+
+        ParseResult result = validator.validateOrFallback(parseResult);
+
+        assertTrue(result.isFallbackUsed());
+    }
+
+    @Test
     public void validateOrFallback_returnsFallbackWhenNodeReferencesUnknownCard() {
         ParseResult parseResult = validParseResultWithMissingFactionEntry();
         parseResult.getNodes().get(0).getFactionCardIds().get("tang").add("missing");
