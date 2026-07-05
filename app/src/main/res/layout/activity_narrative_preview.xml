@@ -109,9 +109,12 @@
             <EditText
                 android:id="@+id/et_preview_source_text"
                 android:layout_width="match_parent"
-                android:layout_height="170dp"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:background="#EEFFFFFF"
+                android:focusable="false"
+                android:focusableInTouchMode="false"
+                android:cursorVisible="false"
                 android:gravity="top|start"
                 android:inputType="textMultiLine"
                 android:padding="12dp"
