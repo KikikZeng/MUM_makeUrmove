@@ -57,17 +57,14 @@ public class NarrativeParseValidatorTest {
     }
 
     @Test
-    public void validateOrFallback_prunesUnassignedFactionWithoutFallbackWhenEnoughFactionsRemain() {
+    public void validateOrFallback_returnsFallbackWhenFactionIsNeverAssigned() {
         ParseResult parseResult = validParseResultWithMissingFactionEntry();
         parseResult.getFactions().add(new Faction("local", "地方势力", "事件不足的地方阵营"));
         parseResult.getCards().add(new EventCard("l1", "local", "地方观望", "地方保持观望", "地方态度"));
 
         ParseResult result = validator.validateOrFallback(parseResult);
 
-        assertFalse(result.isFallbackUsed());
-        assertEquals(2, result.getFactions().size());
-        assertEquals(2, result.getCards().size());
-        assertFalse(result.getNodes().get(0).getFactionCardIds().containsKey("local"));
+        assertTrue(result.isFallbackUsed());
     }
 
     @Test
@@ -135,7 +132,7 @@ public class NarrativeParseValidatorTest {
                 new NarrativeNode(0, "起势", "局势开始变化", "第1段", mapOf("tang", list("t1"))),
                 new NarrativeNode(1, "反叛", "反叛势力行动", "第2段", mapOf("rebel", list("r1")))
         ));
-        return new ParseResult(factions, cards, nodes, 0, true);
+        return new ParseResult(factions, cards, nodes, 2, false);
     }
 
     private List<String> list(String... values) {

@@ -28,6 +28,10 @@ public class NarrativeStateMapper {
         viewData.setRawText(rawText);
         viewData.setTotalNodes(parseResult.getTotalNodes());
         viewData.setFallbackUsed(parseResult.isFallbackUsed());
+        viewData.setParseStatus(parseResult.getParseStatus());
+        viewData.setParseMessage(parseResult.getParseMessage());
+        viewData.setRetryAllowed(parseResult.isRetryAllowed());
+        viewData.setRequiresTextEdit(parseResult.isRequiresTextEdit());
         return viewData;
     }
 

@@ -26,8 +26,8 @@ public class VivoLLMClient {
     // 官方 API 地址
     private static final String BASE_URL = "https://api-ai.vivo.com.cn/v1/chat/completions";
 
-    // 使用轻量级 Mini 模型，速度快且成本低
-    private static final String MODEL_NAME = "Doubao-Seed-2.0-mini";
+    // 与解析质量训练脚本保持一致
+    private static final String MODEL_NAME = "Volc-DeepSeek-V3.2";
 
     // 硬编码 API Key（参赛专用，私有仓库安全）
     private static final String API_KEY = "sk-xuanji-2026006675-cnl6U3V3QlVsTVBCZUlBeA==";

@@ -42,6 +42,12 @@ public class NarrativeParseValidator {
                 || parseResult.getNodes() == null || parseResult.getNodes().isEmpty()) {
             return "missing required fields or empty factions/cards/nodes";
         }
+        if (parseResult.getFactions().size() < 2 || parseResult.getFactions().size() > 4) {
+            return "faction count must be between 2 and 4";
+        }
+        if (parseResult.getTotalNodes() != parseResult.getNodes().size()) {
+            return "totalNodes does not match nodes size";
+        }
 
         Set<String> factionIds = collectFactionIds(parseResult.getFactions());
         if (factionIds.size() != parseResult.getFactions().size()) {
@@ -54,12 +60,21 @@ public class NarrativeParseValidator {
         }
         for (int i = 0; i < parseResult.getNodes().size(); i++) {
             NarrativeNode node = parseResult.getNodes().get(i);
+            if (node == null || node.getNodeIndex() != i) {
+                return "nodeIndex is not continuous from 0";
+            }
             if (!isValidNode(node, factionIds, cardsById)) {
                 return "invalid node at index " + i;
             }
         }
-        if (countAssignedFactions(parseResult.getNodes()) < 2) {
+        Set<String> assignedFactionIds = collectAssignedFactionIds(parseResult.getNodes());
+        if (assignedFactionIds.size() < 2) {
             return "less than 2 factions have assigned cards";
+        }
+        for (String factionId : factionIds) {
+            if (!assignedFactionIds.contains(factionId)) {
+                return "faction " + factionId + " has no assigned cards";
+            }
         }
         return null;
     }

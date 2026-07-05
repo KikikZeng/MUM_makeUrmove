@@ -8,11 +8,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ParseResult {
+    public static final String STATUS_SUCCESS = "STATUS_SUCCESS";
+    public static final String STATUS_FACTION_COUNT_INVALID = "STATUS_FACTION_COUNT_INVALID";
+    public static final String STATUS_PARSE_ERROR = "STATUS_PARSE_ERROR";
+    public static final String STATUS_MISSING_ACTION = "STATUS_MISSING_ACTION";
+
     private List<Faction> factions = new ArrayList<>();
     private List<EventCard> cards = new ArrayList<>();
     private List<NarrativeNode> nodes = new ArrayList<>();
     private int totalNodes;
     private boolean fallbackUsed;
+    private String parseStatus = STATUS_SUCCESS;
+    private String parseMessage = "";
+    private boolean retryAllowed = true;
+    private boolean requiresTextEdit;
 
     public ParseResult() {
     }
@@ -24,6 +33,7 @@ public class ParseResult {
         setNodes(nodes);
         this.totalNodes = totalNodes;
         this.fallbackUsed = fallbackUsed;
+        this.parseStatus = fallbackUsed ? STATUS_PARSE_ERROR : STATUS_SUCCESS;
     }
 
     public List<Faction> getFactions() {
@@ -64,5 +74,37 @@ public class ParseResult {
 
     public void setFallbackUsed(boolean fallbackUsed) {
         this.fallbackUsed = fallbackUsed;
+    }
+
+    public String getParseStatus() {
+        return parseStatus;
+    }
+
+    public void setParseStatus(String parseStatus) {
+        this.parseStatus = parseStatus != null ? parseStatus : STATUS_SUCCESS;
+    }
+
+    public String getParseMessage() {
+        return parseMessage;
+    }
+
+    public void setParseMessage(String parseMessage) {
+        this.parseMessage = parseMessage != null ? parseMessage : "";
+    }
+
+    public boolean isRetryAllowed() {
+        return retryAllowed;
+    }
+
+    public void setRetryAllowed(boolean retryAllowed) {
+        this.retryAllowed = retryAllowed;
+    }
+
+    public boolean isRequiresTextEdit() {
+        return requiresTextEdit;
+    }
+
+    public void setRequiresTextEdit(boolean requiresTextEdit) {
+        this.requiresTextEdit = requiresTextEdit;
     }
 }
