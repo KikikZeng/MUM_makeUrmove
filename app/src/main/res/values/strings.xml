@@ -1,5 +1,5 @@
 <resources>
-   <string name="app_name">CardGame</string>
+   <string name="app_name">历历在目</string>
    <string name="rules_text"><![CDATA[
    <b>【游戏目标】</b><br/>
    按历史顺序，正确打出你所在阵营的所有事件牌。<br/>
